@@ -19,7 +19,12 @@ function readUsers(): SystemUser[] {
     if (!stored) return seedUsers;
     const parsed: unknown = JSON.parse(stored);
     if (!Array.isArray(parsed) || !parsed.some((user) => user?.id === 'USR-001' && user?.role === 'admin')) return seedUsers;
-    return parsed as SystemUser[];
+    return parsed.map((record) => {
+      if (!record || typeof record !== 'object') return record;
+      return Object.fromEntries(
+        Object.entries(record).filter(([field]) => field !== 'departmentId' && field !== 'departmentName')
+      ) as unknown as SystemUser;
+    });
   } catch {
     return seedUsers;
   }

@@ -18,7 +18,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useSimulatedLoad } from '../hooks/useSimulatedLoad';
 import { useTableDirectory } from '../hooks/useTableDirectory';
 import type { Position, PositionInput, PositionSortKey, RecordStatusFilter } from '../types/organization';
-import { findDepartment, positionStats } from '../utils/organization';
+import { positionStats } from '../utils/organization';
 
 interface PositionsProps {
   /** Prototype control: first load fails so the error state can be reviewed. */
@@ -38,8 +38,6 @@ function comparePositions(a: PositionRow, b: PositionRow, key: PositionSortKey) 
       return a.position.name.localeCompare(b.position.name);
     case 'code':
       return a.position.code.localeCompare(b.position.code);
-    case 'department':
-      return (a.department?.name ?? '').localeCompare(b.department?.name ?? '') || a.position.code.localeCompare(b.position.code);
     case 'employees':
       return a.employees - b.employees;
     case 'status':
@@ -47,53 +45,43 @@ function comparePositions(a: PositionRow, b: PositionRow, key: PositionSortKey) 
   }
 }
 
-const searchText = (r: PositionRow) => `${r.position.name} ${r.position.code} ${r.department?.name ?? ''}`;
+const searchText = (r: PositionRow) => `${r.position.name} ${r.position.code}`;
 
 export function Positions({ simulateLoadError = false }: PositionsProps) {
-  const { departments, positions, createPosition, updatePosition, setPositionStatus } = useOrganization();
+  const { positions, createPosition, updatePosition, setPositionStatus } = useOrganization();
   const { employees } = useEmployees();
   const { toast } = useToast();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
 
-  const [departmentId, setDepartmentId] = useState('all');
   const [status, setStatus] = useState<RecordStatusFilter>('all');
   const [form, setForm] = useState<FormState>({ open: false });
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [deactivating, setDeactivating] = useState<DeactivateRequest | null>(null);
 
   const rows = useMemo<PositionRow[]>(
-    () =>
-    positions.map((position) => ({
-      position,
-      department: findDepartment(departments, position.departmentId),
-      employees: positionStats(position, employees).employees
-    })),
-    [positions, departments, employees]
+    () => positions.map((position) => ({ position, employees: positionStats(position, employees).employees })),
+    [positions, employees]
   );
 
   const matches = useCallback(
-    (r: PositionRow) =>
-    (departmentId === 'all' || r.position.departmentId === departmentId) && (status === 'all' || r.position.status === status),
-    [departmentId, status]
+    (r: PositionRow) => status === 'all' || r.position.status === status,
+    [status]
   );
   const directory = useTableDirectory<PositionRow, PositionSortKey>({
     rows,
     searchText,
     matches,
     compare: comparePositions,
-    initialSort: { key: 'department', direction: 'asc' },
+    initialSort: { key: 'name', direction: 'asc' },
     descFirst: ['employees']
   });
-  const hasFilters = directory.query.trim() !== '' || departmentId !== 'all' || status !== 'all';
+  const hasFilters = directory.query.trim() !== '' || status !== 'all';
   const clearFilters = () => {
     directory.setQuery('');
-    setDepartmentId('all');
     setStatus('all');
   };
 
   const viewing = positions.find((p) => p.id === viewingId) ?? null;
-  const editingCount = form.editing ? rows.find((r) => r.position.id === form.editing?.id)?.employees ?? 0 : 0;
-
   const openEdit = (position: Position) => {
     setViewingId(null);
     setForm({ open: true, editing: position });
@@ -106,8 +94,7 @@ export function Positions({ simulateLoadError = false }: PositionsProps) {
       toast({ title: 'Position updated successfully.' });
     } else {
       const created = createPosition(input);
-      const dept = findDepartment(departments, created.departmentId);
-      toast({ title: 'Position created successfully.', description: `${created.name} was added to ${dept?.name ?? 'the department'}.` });
+      toast({ title: 'Position created successfully.', description: `${created.name} is available on employee profiles.` });
     }
     closeForm();
   };
@@ -143,7 +130,7 @@ export function Positions({ simulateLoadError = false }: PositionsProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Position Management" description="Manage employee positions and their department assignments." actions={addButton} />
+      <PageHeader title="Position Management" description="Manage optional job titles shown on employee profiles." actions={addButton} />
 
       {loadState === 'ready' && <PositionSummary positions={positions} employees={employees} />}
 
@@ -163,18 +150,10 @@ export function Positions({ simulateLoadError = false }: PositionsProps) {
               value={directory.query}
               onChange={directory.setQuery}
               label="Search positions"
-              placeholder="Search by position, code or department"
+              placeholder="Search by position or code"
               className="lg:max-w-sm" />
             
               <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center lg:ml-auto">
-                <Select
-                hideLabel
-                label="Department"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
-                className="sm:w-52"
-                options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
-              
                 <Select
                 hideLabel
                 label="Status"
@@ -205,7 +184,7 @@ export function Positions({ simulateLoadError = false }: PositionsProps) {
             icon={positions.length === 0 ? BriefcaseIcon : SearchXIcon}
             title="No positions found."
             description={
-            positions.length === 0 ? 'Create a position and assign it to a department.' : 'Try adjusting your search or filters.'
+            positions.length === 0 ? 'Create optional job titles for employee profiles.' : 'Try adjusting your search or filters.'
             }
             action={
             <div className="flex flex-wrap justify-center gap-2">
@@ -236,15 +215,11 @@ export function Positions({ simulateLoadError = false }: PositionsProps) {
         open={form.open}
         editing={form.editing}
         positions={positions}
-        departments={departments}
-        defaultDepartmentId={departmentId === 'all' ? undefined : departmentId}
-        assignedEmployees={editingCount}
         onClose={closeForm}
         onSubmit={submitForm} />
       
       <PositionDetailsModal
         position={viewing}
-        departments={departments}
         employees={employees}
         onClose={() => setViewingId(null)}
         onEdit={openEdit} />

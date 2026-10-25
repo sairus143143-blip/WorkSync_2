@@ -1,14 +1,12 @@
 import {
   BellIcon,
   BriefcaseIcon,
-  Building2Icon,
   CalendarCheckIcon,
   FileTextIcon,
   FolderOpenIcon,
   GaugeIcon,
   ListChecksIcon,
   SettingsIcon,
-  ShieldCheckIcon,
   UserCogIcon,
   UserIcon,
   UsersRoundIcon } from
@@ -22,7 +20,7 @@ export const modules = {
     icon: UserCogIcon,
     capabilities: [
     'Create, edit and deactivate user accounts',
-    'Assign Administrator, Manager and Employee roles',
+    'Maintain Admin and Employee account access',
     'Reset passwords and manage sign-in access',
     'Review recent account activity']
 
@@ -35,18 +33,7 @@ export const modules = {
     'Searchable employee directory with filters',
     'Employee profiles with job and contact details',
     'Add, edit and archive employee records',
-    'Link employees to departments and positions']
-
-  },
-  departments: {
-    title: 'Departments',
-    description: 'Organize the company into departments and teams.',
-    icon: Building2Icon,
-    capabilities: [
-    'Create and organize departments',
-    'Assign a head to each department',
-    'See headcount per department',
-    'View the projects each department runs']
+    'Optionally assign a job title to an employee']
 
   },
   positions: {
@@ -55,20 +42,8 @@ export const modules = {
     icon: BriefcaseIcon,
     capabilities: [
     'Define job titles and seniority levels',
-    'Map positions to departments',
-    'Track filled and open seats',
+    'Track employees by job title',
     'Write position descriptions']
-
-  },
-  positionAdminAssignment: {
-    title: 'Position Admin Assignment',
-    description: 'Administrator assignment management will be implemented in Phase 7.',
-    icon: ShieldCheckIcon,
-    capabilities: [
-    'Map administrative responsibilities to positions',
-    'Review responsibility assignments by department',
-    'Use imported organizational data when available',
-    'Keep a history of assignment changes']
 
   },
   attendance: {
@@ -84,11 +59,11 @@ export const modules = {
   },
   projects: {
     title: 'All Projects',
-    description: 'Every project running across the organization.',
+    description: 'Every active project and its assigned team.',
     icon: FolderOpenIcon,
     capabilities: [
     'Create projects with owners and deadlines',
-    'Add members from any department',
+    'Assign registered employees to project teams',
     'Track progress and project status',
     'Flag projects that are at risk']
 
@@ -106,13 +81,13 @@ export const modules = {
   },
   productivity: {
     title: 'Productivity',
-    description: 'How individuals, teams and departments are performing.',
+    description: 'How employees and projects are performing.',
     icon: GaugeIcon,
     capabilities: [
     'Productivity scores per employee and team',
     'Hours logged against targets',
     'Task completion and on-time rates',
-    'Department-to-department comparisons']
+    'Compare employee workload and project progress']
 
   },
   reports: {

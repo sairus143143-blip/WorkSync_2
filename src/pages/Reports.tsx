@@ -43,12 +43,11 @@ function hours(minutes: number) {
 
 export function Reports() {
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const { records, schedule } = useAttendance();
   const { projects, members } = useProjects();
   const { tasks, activities } = useTasks();
   const [period, setPeriod] = useState<ReportPeriod>('month');
-  const [departmentId, setDepartmentId] = useState('all');
   const [customFrom, setCustomFrom] = useState('2026-10-01');
   const [customTo, setCustomTo] = useState(schedule.today);
 
@@ -58,11 +57,11 @@ export function Reports() {
 
   const report = useMemo(() => {
     if (!validRange || range.from > schedule.today) return null;
-    const scopedEmployees = employees.filter((employee) => departmentId === 'all' || employee.departmentId === departmentId);
+    const scopedEmployees = employees;
     const employeeIds = new Set(scopedEmployees.map((employee) => employee.id));
-    const attendanceRows = buildRangeRows(range.from, reportEnd, { employees: scopedEmployees, records, departments, positions, schedule });
+    const attendanceRows = buildRangeRows(range.from, reportEnd, { employees: scopedEmployees, records, positions, schedule });
     const periodTasks = tasks.filter((task) => employeeIds.has(task.assignedEmployeeId) && isValidReportDate(task.createdAt.slice(0, 10)) && task.createdAt.slice(0, 10) >= range.from && task.createdAt.slice(0, 10) <= reportEnd);
-    const scopedProjects = projects.filter((project) => (departmentId === 'all' || project.departmentId === departmentId) && isValidReportDate(project.createdAt.slice(0, 10)) && project.createdAt.slice(0, 10) >= range.from && project.createdAt.slice(0, 10) <= reportEnd);
+    const scopedProjects = projects.filter((project) => isValidReportDate(project.createdAt.slice(0, 10)) && project.createdAt.slice(0, 10) >= range.from && project.createdAt.slice(0, 10) <= reportEnd);
     const attendanceRecords = attendanceRows.filter((row) => row.record).map((row) => row.record!);
     const expectedAttendance = attendanceRows.filter((row) => row.status !== 'on_leave');
     const presentRows = expectedAttendance.filter((row) => row.status === 'present' || row.status === 'late' || row.status === 'half_day' || row.status === 'incomplete');
@@ -89,7 +88,7 @@ export function Reports() {
       const employeeEligibleCompletions = onTimeEligible.filter((task) => task.assignedEmployeeId === metric.employee.id);
       const employeeOnTimeCompletions = onTimeTasks.filter((task) => task.assignedEmployeeId === metric.employee.id);
       const employee = metric.employee;
-      return { ...metric, onTimeRate: employeeEligibleCompletions.length ? Math.round(employeeOnTimeCompletions.length / employeeEligibleCompletions.length * 100) : 0, department: departments.find((department) => department.id === employee.departmentId)?.name ?? '—', position: positions.find((position) => position.id === employee.positionId)?.name ?? '—', attendanceRate: percent(present, eligible.length), attendanceMinutes: attendanceRows.filter((row) => row.employee.id === employee.id && row.record).reduce((sum, row) => sum + workedMinutes(row.checkIn, row.checkOut, schedule), 0) };
+      return { ...metric, onTimeRate: employeeEligibleCompletions.length ? Math.round(employeeOnTimeCompletions.length / employeeEligibleCompletions.length * 100) : 0, position: positions.find((position) => position.id === employee.positionId)?.name ?? '—', attendanceRate: percent(present, eligible.length), attendanceMinutes: attendanceRows.filter((row) => row.employee.id === employee.id && row.record).reduce((sum, row) => sum + workedMinutes(row.checkIn, row.checkOut, schedule), 0) };
     });
     const activeProjects = scopedProjects.filter((project) => project.status === 'active').length;
     const completedProjects = scopedProjects.filter((project) => project.status === 'completed').length;
@@ -115,15 +114,15 @@ export function Reports() {
       projectStatuses,
       employeesReport
     };
-  }, [validRange, range.from, reportEnd, schedule.today, schedule, employees, records, departments, positions, tasks, projects, members, activities, departmentId]);
+  }, [validRange, range.from, reportEnd, schedule.today, schedule, employees, records, positions, tasks, projects, members, activities]);
 
   const exportRows = report?.employeesReport.map((row) => [
-    employeeFullName(row.employee), row.department, row.position, row.totalTasks, row.completedTasks,
+    employeeFullName(row.employee), row.position, row.totalTasks, row.completedTasks,
     row.completionRate, row.onTimeRate, row.attendanceRate, row.workingHours.toFixed(1), row.activeProjects
   ]) ?? [];
 
   const exportReport = () => downloadCsv('worksync-employee-activity-report.csv', [
-    'Employee', 'Department', 'Position', 'Total Tasks', 'Completed Tasks', 'Task Completion Rate (%)', 'On-Time Rate (%)', 'Attendance Rate', 'Working Hours', 'Active Projects'
+    'Employee', 'Position', 'Total Tasks', 'Completed Tasks', 'Task Completion Rate (%)', 'On-Time Rate (%)', 'Attendance Rate', 'Working Hours', 'Active Projects'
   ], exportRows);
 
   const dateLabel = validRange ? `${format(parseISO(range.from), 'MMM d, yyyy')} – ${format(parseISO(reportEnd), 'MMM d, yyyy')}` : 'Choose a valid date range';
@@ -132,9 +131,8 @@ export function Reports() {
     <PageHeader title="Reports & Analytics" description="Review workforce attendance, task delivery, project activity, and measurable productivity." actions={<Button variant="secondary" leftIcon={<DownloadIcon className="h-4 w-4" />} onClick={exportReport} disabled={!exportRows.length} aria-label="Export filtered employee activity report as CSV">Export CSV</Button>} />
 
     <Card className="border-primary/15" bodyClassName="p-4 sm:p-5">
-      <div className="grid gap-4 md:grid-cols-[minmax(180px,1fr)_minmax(220px,1fr)_auto] md:items-end">
+      <div className="grid gap-4 md:grid-cols-[minmax(180px,1fr)_auto] md:items-end">
         <Select label="Reporting period" value={period} onChange={(event) => setPeriod(event.target.value as ReportPeriod)} options={periodOptions} />
-        <Select label="Department" value={departmentId} onChange={(event) => setDepartmentId(event.target.value)} options={[{ value: 'all', label: 'All Departments' }, ...departments.map((department) => ({ value: department.id, label: department.name }))]} />
         <p className="pb-2 text-sm text-muted"><CalendarDaysIcon className="mr-1.5 inline h-4 w-4 text-secondary" aria-hidden />{dateLabel}</p>
       </div>
       {period === 'custom' && <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -147,7 +145,7 @@ export function Reports() {
 
     {!report ? <Card><EmptyState icon={CalendarDaysIcon} title="No report for this date range" description="Choose a valid range that includes dates available in the mock data." /></Card> : <>
       <section aria-label="Report summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Employees" value={String(report.employees.length)} icon={UsersIcon} tone="primary" hint="In selected department scope" />
+        <StatCard label="Employees" value={String(report.employees.length)} icon={UsersIcon} tone="primary" hint="Across the workforce" />
         <StatCard label="Present days" value={String(report.presentDays)} icon={CheckCircle2Icon} tone="success" hint={`${report.attendanceRate} attendance rate`} />
         <StatCard label="Tasks" value={String(report.tasks.length)} icon={ListChecksIcon} tone="neutral" hint={`${report.completedTasks.length} completed`} />
         <StatCard label="Task completion" value={report.taskCompletionRate} icon={ActivityIcon} tone="primary" hint={`${report.overdueTasks.length} overdue`} />
@@ -172,8 +170,8 @@ export function Reports() {
         </Card>
       </section>
 
-      <Card title="Employee activity report" description={`${report.employeesReport.length} employees · ${dateLabel}`} action={<Badge tone="primary">Filtered scope</Badge>}>
-        {report.employeesReport.length === 0 ? <EmptyState icon={UsersIcon} title="No employees in this scope" description="Try another department or reporting period." /> : <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead><tr className="border-b border-line text-xs uppercase tracking-wide text-muted"><th scope="col" className="pb-3 pr-4 font-medium">Employee</th><th scope="col" className="px-3 pb-3 font-medium">Department</th><th scope="col" className="px-3 pb-3 font-medium">Position</th><th scope="col" className="px-3 pb-3 font-medium">Tasks</th><th scope="col" className="px-3 pb-3 font-medium">Completion</th><th scope="col" className="px-3 pb-3 font-medium">Attendance</th><th scope="col" className="px-3 pb-3 font-medium">Hours</th><th scope="col" className="pb-3 pl-3 font-medium">Active projects</th></tr></thead><tbody>{report.employeesReport.map((row) => <tr key={row.employee.id} className="border-b border-line last:border-0"><th scope="row" className="py-3 pr-4 font-medium text-ink">{employeeFullName(row.employee)}<span className="mt-0.5 block text-xs font-normal text-muted">{row.employee.employeeNumber || '—'}</span></th><td className="px-3 py-3 text-muted">{row.department}</td><td className="px-3 py-3 text-muted">{row.position}</td><td className="px-3 py-3 tabular-nums">{row.completedTasks} / {row.totalTasks}</td><td className="px-3 py-3 tabular-nums">{row.completionRate}%</td><td className="px-3 py-3 tabular-nums">{row.attendanceRate}</td><td className="px-3 py-3 tabular-nums">{row.workingHours.toFixed(1)}h</td><td className="pl-3 py-3 tabular-nums">{row.activeProjects}</td></tr>)}</tbody></table></div>}
+      <Card title="Employee activity report" description={`${report.employeesReport.length} employees · ${dateLabel}`} action={<Badge tone="primary">Full workforce</Badge>}>
+        {report.employeesReport.length === 0 ? <EmptyState icon={UsersIcon} title="No employee activity" description="No employee records match this reporting period." /> : <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left text-sm"><thead><tr className="border-b border-line text-xs uppercase tracking-wide text-muted"><th scope="col" className="pb-3 pr-4 font-medium">Employee</th><th scope="col" className="px-3 pb-3 font-medium">Position</th><th scope="col" className="px-3 pb-3 font-medium">Tasks</th><th scope="col" className="px-3 pb-3 font-medium">Completion</th><th scope="col" className="px-3 pb-3 font-medium">Attendance</th><th scope="col" className="px-3 pb-3 font-medium">Hours</th><th scope="col" className="pb-3 pl-3 font-medium">Active projects</th></tr></thead><tbody>{report.employeesReport.map((row) => <tr key={row.employee.id} className="border-b border-line last:border-0"><th scope="row" className="py-3 pr-4 font-medium text-ink">{employeeFullName(row.employee)}<span className="mt-0.5 block text-xs font-normal text-muted">{row.employee.employeeNumber || '—'}</span></th><td className="px-3 py-3 text-muted">{row.position}</td><td className="px-3 py-3 tabular-nums">{row.completedTasks} / {row.totalTasks}</td><td className="px-3 py-3 tabular-nums">{row.completionRate}%</td><td className="px-3 py-3 tabular-nums">{row.attendanceRate}</td><td className="px-3 py-3 tabular-nums">{row.workingHours.toFixed(1)}h</td><td className="pl-3 py-3 tabular-nums">{row.activeProjects}</td></tr>)}</tbody></table></div>}
       </Card>
     </>}
   </div>;

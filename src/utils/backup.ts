@@ -5,6 +5,7 @@ import { defaultSettings } from '../data/settings';
 
 export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 export const IMPORTABLE_CATEGORIES: ImportableCategory[] = ['notifications', 'settings'];
+const retiredBackupCategories = new Set(['departments', 'adminAreas', 'positionAdminAssignments']);
 
 export function buildBackup(data: WorkSyncBackup['data']): WorkSyncBackup {
   return { metadata: { application: BACKUP_APP_ID, formatVersion: BACKUP_FORMAT_VERSION, exportedAt: new Date().toISOString(), categories: BACKUP_CATEGORIES.filter((category) => data[category] !== undefined) }, data };
@@ -19,10 +20,14 @@ export function parseBackupText(text: string): WorkSyncBackup {
   if (backup.metadata?.formatVersion !== BACKUP_FORMAT_VERSION) throw new Error('This backup format version is not supported.');
   if (!isIsoDateTime(backup.metadata.exportedAt)) throw new Error('The backup export timestamp is invalid.');
   if (!Array.isArray(backup.metadata.categories) || !backup.data || typeof backup.data !== 'object') throw new Error('The backup is missing its categories or data.');
-  const categories = backup.metadata.categories;
-  if (categories.some((category) => !BACKUP_CATEGORIES.includes(category as BackupCategory))) throw new Error('The backup contains an unsupported data category.');
-  for (const category of categories) if (!(category in backup.data)) throw new Error(`The backup is missing the ${category} data listed in its metadata.`);
-  return backup as WorkSyncBackup;
+  const listedCategories = backup.metadata.categories;
+  if (listedCategories.some((category) => !BACKUP_CATEGORIES.includes(category as BackupCategory) && !retiredBackupCategories.has(category))) throw new Error('The backup contains an unsupported data category.');
+  for (const category of listedCategories) if (!(category in backup.data)) throw new Error(`The backup is missing the ${category} data listed in its metadata.`);
+  const categories = listedCategories.filter((category) => BACKUP_CATEGORIES.includes(category as BackupCategory));
+  const data = Object.fromEntries(
+    Object.entries(backup.data).filter(([category]) => BACKUP_CATEGORIES.includes(category as BackupCategory))
+  ) as WorkSyncBackup['data'];
+  return { ...backup, metadata: { ...backup.metadata, categories }, data } as WorkSyncBackup;
 }
 
 function isIsoDateTime(value: unknown): value is string {

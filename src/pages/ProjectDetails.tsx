@@ -20,7 +20,6 @@ import { useUsers } from '../contexts/UsersContext';
 import { useSimulatedLoad } from '../hooks/useSimulatedLoad';
 import type { ProjectMember } from '../types/projects';
 import { cn } from '../utils/cn';
-import { findDepartment } from '../utils/organization';
 import {
   activeMembersOf,
   daysRemainingLabel,
@@ -51,7 +50,7 @@ export function ProjectDetails({ simulateLoadError = false }: ProjectDetailsProp
   const navigate = useNavigate();
   const { projects, members, activities, addMembers, removeMember } = useProjects();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const { users } = useUsers();
   const { toast } = useToast();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
@@ -115,7 +114,6 @@ export function ProjectDetails({ simulateLoadError = false }: ProjectDetailsProp
 
   }
 
-  const department = findDepartment(departments, project.departmentId);
   const creator = users.find((u) => u.id === project.createdBy);
   const state = deadlineState(project);
   const days = daysUntil(project.deadline);
@@ -172,10 +170,6 @@ export function ProjectDetails({ simulateLoadError = false }: ProjectDetailsProp
             </div>
 
             <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
-              <Field label="Department">
-                {department?.name ?? '—'}
-                {department?.status === 'inactive' && <span className="ml-1 text-muted">(Inactive)</span>}
-              </Field>
               <Field label="Start date">{formatProjectDate(project.startDate)}</Field>
               <Field label="Deadline">
                 {formatProjectDate(project.deadline)}
@@ -195,7 +189,6 @@ export function ProjectDetails({ simulateLoadError = false }: ProjectDetailsProp
             ref={membersRef}
             members={projectMembers}
             employees={employees}
-            departments={departments}
             positions={positions}
             summary={summary}
             onAdd={() => setAddOpen(true)}
@@ -212,7 +205,6 @@ export function ProjectDetails({ simulateLoadError = false }: ProjectDetailsProp
         open={addOpen}
         projectName={project.name}
         employees={employees}
-        departments={departments}
         positions={positions}
         currentMemberIds={memberIds}
         onClose={() => setAddOpen(false)}

@@ -10,8 +10,6 @@ interface EmployeeFiltersProps {
   onQueryChange: (value: string) => void;
   status: EmploymentStatusFilter;
   onStatusChange: (value: EmploymentStatusFilter) => void;
-  departmentId: string;
-  onDepartmentChange: (value: string) => void;
   positionId: string;
   onPositionChange: (value: string) => void;
   hasFilters: boolean;
@@ -21,8 +19,7 @@ interface EmployeeFiltersProps {
 
 export function EmployeeFilters(props: EmployeeFiltersProps) {
   // Filters include inactive records so historical assignments stay findable.
-  const { departments, positions } = useOrganization();
-  const positionOptions = props.departmentId === 'all' ? positions : positions.filter((p) => p.departmentId === props.departmentId);
+  const { positions } = useOrganization();
 
   return (
     <div className="space-y-3 border-b border-line p-4">
@@ -31,10 +28,10 @@ export function EmployeeFilters(props: EmployeeFiltersProps) {
           value={props.query}
           onChange={props.onQueryChange}
           label="Search employees"
-          placeholder="Search name, employee no., email, department or position"
+          placeholder="Search name, employee no., email or position"
           className="xl:max-w-md" />
         
-        <div className="grid gap-3 sm:grid-cols-3 xl:ml-auto xl:flex">
+        <div className="grid gap-3 sm:grid-cols-2 xl:ml-auto xl:flex">
           <Select
             hideLabel
             label="Employment status"
@@ -50,19 +47,11 @@ export function EmployeeFilters(props: EmployeeFiltersProps) {
           
           <Select
             hideLabel
-            label="Department"
-            value={props.departmentId}
-            onChange={(e) => props.onDepartmentChange(e.target.value)}
-            className="xl:w-52"
-            options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
-          
-          <Select
-            hideLabel
             label="Position"
             value={props.positionId}
             onChange={(e) => props.onPositionChange(e.target.value)}
             className="xl:w-52"
-            options={[{ value: 'all', label: 'All Positions' }, ...positionOptions.map((p) => ({ value: p.id, label: p.name }))]} />
+            options={[{ value: 'all', label: 'All Positions' }, ...positions.map((p) => ({ value: p.id, label: p.name }))]} />
           
         </div>
       </div>

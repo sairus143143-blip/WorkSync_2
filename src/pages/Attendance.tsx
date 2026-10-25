@@ -30,7 +30,7 @@ type AttendanceTab = 'daily' | 'history';
 export function Attendance({ simulateLoadError = false }: AttendanceProps) {
   const { schedule, records, saveRecord } = useAttendance();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const { toast } = useToast();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
 
@@ -39,7 +39,7 @@ export function Attendance({ simulateLoadError = false }: AttendanceProps) {
   const [formTarget, setFormTarget] = useState<AttendanceFormTarget | null>(null);
   const [viewing, setViewing] = useState<{employeeId: string;date: string;} | null>(null);
 
-  const ctx = useMemo(() => ({ employees, records, departments, positions, schedule }), [employees, records, departments, positions, schedule]);
+  const ctx = useMemo(() => ({ employees, records, positions, schedule }), [employees, records, positions, schedule]);
   const dailyRows = useMemo(() => buildDailyRows(date, ctx), [date, ctx]);
   const dayLabel = date === schedule.today ? 'Today' : formatAttendanceDate(date, 'MMM d');
 
@@ -124,7 +124,6 @@ export function Attendance({ simulateLoadError = false }: AttendanceProps) {
               rows={dailyRows}
               date={date}
               today={schedule.today}
-              departments={departments}
               positions={positions}
               onDateChange={setDate}
               onView={openView}
@@ -134,7 +133,6 @@ export function Attendance({ simulateLoadError = false }: AttendanceProps) {
             <AttendanceHistoryPanel
               employees={employees}
               records={records}
-              departments={departments}
               positions={positions}
               schedule={schedule}
               onView={openView} />

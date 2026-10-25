@@ -14,9 +14,9 @@ export function AttendanceOverview({ className }: {className?: string;}) {
   const [period, setPeriod] = useState<AttendancePeriod>('today');
   const { records, schedule } = useAttendance();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const snapshot = attendanceByPeriod[period];
-  const daily = useMemo(() => summarizeAttendance(buildDailyRows(schedule.today, { employees, records, departments, positions, schedule })), [schedule, employees, records, departments, positions]);
+  const daily = useMemo(() => summarizeAttendance(buildDailyRows(schedule.today, { employees, records, positions, schedule })), [schedule, employees, records, positions]);
   const currentSnapshot = period === 'today' ? { ...snapshot, caption: `${daily.total} employees expected today`, present: daily.counts.present, late: daily.counts.late, absent: daily.counts.absent, leave: daily.counts.on_leave } : snapshot;
   const total = currentSnapshot.present + currentSnapshot.late + currentSnapshot.absent + currentSnapshot.leave;
   const attended = currentSnapshot.present + currentSnapshot.late;

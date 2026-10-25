@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { Employee } from '../../types/employees';
-import type { Department } from '../../types/organization';
 import type { Project } from '../../types/projects';
 import type { TaskDeadlineFilter, TaskPriorityFilter, TaskStatusFilter } from '../../types/tasks';
 import { TASK_PRIORITIES, TASK_STATUSES, taskPriorityLabels, taskStatusLabels } from '../../utils/tasks';
@@ -20,13 +19,10 @@ interface TaskFiltersProps {
   onProjectChange: (value: string) => void;
   employeeId: string;
   onEmployeeChange: (value: string) => void;
-  departmentId: string;
-  onDepartmentChange: (value: string) => void;
   deadline: TaskDeadlineFilter;
   onDeadlineChange: (value: TaskDeadlineFilter) => void;
   projects: Project[];
   employees: Employee[];
-  departments: Department[];
   hasFilters: boolean;
   onClear: () => void;
   resultCount: number;
@@ -36,7 +32,7 @@ export function TaskFilters(props: TaskFiltersProps) {
   const [expanded, setExpanded] = useState(false);
 
   const filterGrid =
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <Select
         hideLabel
         label="Status"
@@ -73,13 +69,6 @@ export function TaskFilters(props: TaskFiltersProps) {
           { value: 'all', label: 'All Employees' },
           ...props.employees.map((e) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))
         ]} />
-      
-      <Select
-        hideLabel
-        label="Department"
-        value={props.departmentId}
-        onChange={(e) => props.onDepartmentChange(e.target.value)}
-        options={[{ value: 'all', label: 'All Departments' }, ...props.departments.map((d) => ({ value: d.id, label: d.name }))]} />
       
       <Select
         hideLabel

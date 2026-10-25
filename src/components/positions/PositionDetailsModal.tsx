@@ -1,9 +1,8 @@
 import React, { useRef } from 'react';
-import { Building2Icon } from 'lucide-react';
 import type { Employee } from '../../types/employees';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import { employeeFullName } from '../../utils/employees';
-import { findDepartment, positionStats } from '../../utils/organization';
+import { positionStats } from '../../utils/organization';
 import { EmploymentStatusBadge } from '../employees/EmploymentStatusBadge';
 import { RecordStatusBadge } from '../organization/RecordStatusBadge';
 import { Avatar } from '../ui/Avatar';
@@ -13,7 +12,6 @@ import { Modal } from '../ui/Modal';
 
 interface PositionDetailsModalProps {
   position: Position | null;
-  departments: Department[];
   employees: Employee[];
   onClose: () => void;
   onEdit: (position: Position) => void;
@@ -28,12 +26,11 @@ function Stat({ label, value }: {label: string;value: number;}) {
 
 }
 
-export function PositionDetailsModal({ position: open, departments, employees, onClose, onEdit }: PositionDetailsModalProps) {
+export function PositionDetailsModal({ position: open, employees, onClose, onEdit }: PositionDetailsModalProps) {
   const last = useRef<Position | null>(open);
   if (open) last.current = open;
   const position = open ?? last.current;
 
-  const department = position ? findDepartment(departments, position.departmentId) : undefined;
   const stats = position ? positionStats(position, employees) : null;
   const people = position ? employees.filter((e) => e.positionId === position.id) : [];
 
@@ -56,12 +53,7 @@ export function PositionDetailsModal({ position: open, departments, employees, o
       {position && stats &&
       <div className="space-y-5">
           <div>
-            <p className="flex items-center gap-1.5 text-[13px] text-muted">
-              <Building2Icon className="h-3.5 w-3.5" aria-hidden />
-              {department?.name ?? 'Unknown department'}
-              {department?.status === 'inactive' && <Badge className="ml-1">Inactive department</Badge>}
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-semibold text-ink">{position.name}</h3>
               <Badge tone="primary" className="tabular-nums">
                 {position.code}

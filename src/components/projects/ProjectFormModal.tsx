@@ -1,7 +1,5 @@
 import React, { useId, useMemo, useState } from 'react';
-import type { Department } from '../../types/organization';
 import type { Project, ProjectFormValues, ProjectStatus } from '../../types/projects';
-import { assignableDepartments } from '../../utils/employees';
 import {
   DUPLICATE_CODE_MESSAGE,
   PROJECT_STATUSES,
@@ -23,7 +21,6 @@ interface ProjectFormModalProps {
   /** Present when editing. */
   project?: Project;
   projects: Project[];
-  departments: Department[];
   onClose: () => void;
   onSubmit: (values: ProjectFormValues) => void;
   /** Called with a short message when submit is blocked. */
@@ -36,17 +33,16 @@ function initialValues(project: Project | undefined, projects: Project[]): Proje
       name: project.name,
       code: project.code,
       description: project.description,
-      departmentId: project.departmentId,
       startDate: project.startDate,
       deadline: project.deadline,
       status: project.status,
       progress: String(project.progress)
     };
   }
-  return { name: '', code: nextProjectCode(projects), description: '', departmentId: '', startDate: PROJECT_TODAY, deadline: '', status: 'planning', progress: '0' };
+  return { name: '', code: nextProjectCode(projects), description: '', startDate: PROJECT_TODAY, deadline: '', status: 'planning', progress: '0' };
 }
 
-export function ProjectFormModal({ open, project, projects, departments, onClose, onSubmit, onInvalid }: ProjectFormModalProps) {
+export function ProjectFormModal({ open, project, projects, onClose, onSubmit, onInvalid }: ProjectFormModalProps) {
   const { settings } = useSettings();
   const formId = useId();
   const [saving, setSaving] = useState(false);
@@ -57,12 +53,7 @@ export function ProjectFormModal({ open, project, projects, departments, onClose
     const values = initialValues(project, projects);
     return project ? values : { ...values, status: settings.defaultProjectStatus as ProjectStatus };
   }, [open, resetKey, settings.defaultProjectStatus]);
-  const { values, errors, setField, validate } = useProjectForm({ open, initial, resetKey, projects, departments, editing: project });
-
-  const departmentOptions = assignableDepartments(departments, project?.departmentId).map((d) => ({
-    value: d.id,
-    label: d.status === 'inactive' ? `${d.name} (Inactive)` : d.name
-  }));
+  const { values, errors, setField, validate } = useProjectForm({ open, initial, resetKey, projects, editing: project });
   const progressLocked = values.status === 'completed';
   const progressNumber = Math.min(100, Math.max(0, Number(values.progress) || 0));
 
@@ -117,13 +108,6 @@ export function ProjectFormModal({ open, project, projects, departments, onClose
           onChange={(e) => setField('description', e.target.value)}
           className="sm:col-span-2"
           placeholder="What is this project about?" />
-        
-        <Select
-          label="Department"
-          value={values.departmentId}
-          onChange={(e) => setField('departmentId', e.target.value)}
-          error={errors.departmentId}
-          options={[{ value: '', label: 'Select a department' }, ...departmentOptions]} />
         
         <Select
           label="Status"

@@ -1,7 +1,6 @@
 import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { workSchedule } from '../data/attendanceSchedule';
 import type { Employee } from '../types/employees';
-import type { Department } from '../types/organization';
 import type {
   DeadlineState,
   Project,
@@ -13,7 +12,6 @@ import type {
   ProjectStatus,
   ProgressFilter } from
 '../types/projects';
-import { findDepartment } from './organization';
 
 /** The prototype's "today" — shared with Attendance so mock dates line up. */
 export const PROJECT_TODAY = workSchedule.today;
@@ -100,15 +98,13 @@ export function memberSummary(members: ProjectMember[], employees: Employee[], p
   filter((e): e is Employee => Boolean(e));
   return {
     teamMembers: team.length,
-    activeMembers: team.filter((e) => e.employmentStatus === 'active').length,
-    departments: new Set(team.map((e) => e.departmentId)).size
+    activeMembers: team.filter((e) => e.employmentStatus === 'active').length
   };
 }
 
-export function buildProjectRows(projects: Project[], departments: Department[], members: ProjectMember[]): ProjectRow[] {
+export function buildProjectRows(projects: Project[], members: ProjectMember[]): ProjectRow[] {
   return projects.map((project) => ({
     project,
-    department: findDepartment(departments, project.departmentId),
     memberCount: activeMembersOf(members, project.id).length,
     deadlineState: deadlineState(project),
     daysRemaining: daysUntil(project.deadline)
@@ -171,22 +167,16 @@ export const DUPLICATE_CODE_MESSAGE = 'Project code already exists.';
 
 export function validateProject(
 values: ProjectFormValues,
-ctx: {projects: Project[];departments: Department[];editing?: Project;})
+ctx: {projects: Project[];editing?: Project;})
 : ProjectFormErrors {
   const errors: ProjectFormErrors = {};
   const code = values.code.trim().toUpperCase();
-  const department = findDepartment(ctx.departments, values.departmentId);
 
   if (!values.name.trim()) errors.name = 'Project name is required.';
 
   if (!code) errors.code = 'Project code is required.';else
   if (!CODE_PATTERN.test(code)) errors.code = 'Use letters, numbers and hyphens only, e.g. PRJ-014.';else
   if (ctx.projects.some((p) => p.code.toUpperCase() === code && p.id !== ctx.editing?.id)) errors.code = DUPLICATE_CODE_MESSAGE;
-
-  if (!values.departmentId) errors.departmentId = 'Please select a department.';else
-  if (!department) errors.departmentId = 'The selected department no longer exists.';else
-  if (department.status === 'inactive' && department.id !== ctx.editing?.departmentId)
-  errors.departmentId = 'Inactive departments can’t be used for new projects.';
 
   if (!values.startDate) errors.startDate = 'Start date is required.';
   if (!values.deadline) errors.deadline = 'Deadline is required.';else

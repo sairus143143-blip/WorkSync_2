@@ -11,14 +11,14 @@ export interface DeactivateRequest {
 }
 
 interface DeactivateRecordDialogProps {
-  /** e.g. "department" or "position" */
+  /** Record type displayed in the confirmation. */
   noun: string;
   request: DeactivateRequest | null;
   onClose: () => void;
   onConfirm: (request: DeactivateRequest) => void;
 }
 
-/** Shared confirmation for deactivating departments and positions. Nothing is deleted. */
+/** Shared confirmation for deactivating a record. Nothing is deleted. */
 export function DeactivateRecordDialog({ noun, request: openRequest, onClose, onConfirm }: DeactivateRecordDialogProps) {
   const last = useRef<DeactivateRequest | null>(openRequest);
   if (openRequest) last.current = openRequest;

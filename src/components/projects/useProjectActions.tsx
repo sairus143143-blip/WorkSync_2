@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useOrganization } from '../../contexts/OrganizationContext';
 import { useProjects } from '../../contexts/ProjectsContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { Project, ProjectFormValues, ProjectStatus } from '../../types/projects';
@@ -15,7 +14,6 @@ type FormState = {mode: 'create';} | {mode: 'edit';projectId: string;} | null;
  */
 export function useProjectActions(options: {onCreated?: (project: Project) => void;} = {}) {
   const { projects, createProject, updateProject, setProjectStatus } = useProjects();
-  const { departments } = useOrganization();
   const { toast } = useToast();
 
   const [form, setForm] = useState<FormState>(null);
@@ -57,7 +55,6 @@ export function useProjectActions(options: {onCreated?: (project: Project) => vo
       open={form !== null}
       project={editing}
       projects={projects}
-      departments={departments}
       onClose={() => setForm(null)}
       onSubmit={submitForm}
       onInvalid={(message) => toast({ tone: 'error', title: message })} />

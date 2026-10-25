@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckIcon, SearchXIcon } from 'lucide-react';
 import type { Employee, EmploymentStatusFilter } from '../../types/employees';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import { cn } from '../../utils/cn';
 import { employeeFullName, employmentStatusLabels } from '../../utils/employees';
-import { findDepartment, findPosition } from '../../utils/organization';
+import { findPosition } from '../../utils/organization';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
@@ -16,7 +16,6 @@ interface AddMembersModalProps {
   open: boolean;
   projectName: string;
   employees: Employee[];
-  departments: Department[];
   positions: Position[];
   /** Employee IDs already on the project. */
   currentMemberIds: Set<string>;
@@ -25,9 +24,8 @@ interface AddMembersModalProps {
 }
 
 /** Multi-select of employees. Only active, non-member employees can be selected. */
-export function AddMembersModal({ open, projectName, employees, departments, positions, currentMemberIds, onClose, onSubmit }: AddMembersModalProps) {
+export function AddMembersModal({ open, projectName, employees, positions, currentMemberIds, onClose, onSubmit }: AddMembersModalProps) {
   const [query, setQuery] = useState('');
-  const [departmentId, setDepartmentId] = useState('all');
   const [positionId, setPositionId] = useState('all');
   const [status, setStatus] = useState<EmploymentStatusFilter>('active');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -37,7 +35,6 @@ export function AddMembersModal({ open, projectName, employees, departments, pos
   useEffect(() => {
     if (!open) return;
     setQuery('');
-    setDepartmentId('all');
     setPositionId('all');
     setStatus('active');
     setSelected(new Set());
@@ -45,16 +42,14 @@ export function AddMembersModal({ open, projectName, employees, departments, pos
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return employees.
-    filter(
-      (e) =>
-      (departmentId === 'all' || e.departmentId === departmentId) && (
-      positionId === 'all' || e.positionId === positionId) && (
-      status === 'all' || e.employmentStatus === status) && (
-      !q || `${employeeFullName(e)} ${e.employeeNumber}`.toLowerCase().includes(q))
-    ).
-    sort((a, b) => employeeFullName(a).localeCompare(employeeFullName(b)));
-  }, [employees, query, departmentId, positionId, status]);
+    return employees
+      .filter((employee) =>
+        (positionId === 'all' || employee.positionId === positionId) &&
+        (status === 'all' || employee.employmentStatus === status) &&
+        (!q || `${employeeFullName(employee)} ${employee.employeeNumber}`.toLowerCase().includes(q))
+      )
+      .sort((a, b) => employeeFullName(a).localeCompare(employeeFullName(b)));
+  }, [employees, query, positionId, status]);
 
   const reasonDisabled = (e: Employee): string | null => {
     if (currentMemberIds.has(e.id)) return 'Already a member';
@@ -69,8 +64,6 @@ export function AddMembersModal({ open, projectName, employees, departments, pos
     next.add(id);
     return next;
   });
-
-  const positionOptions = departmentId === 'all' ? positions : positions.filter((p) => p.departmentId === departmentId);
 
   return (
     <Modal
@@ -92,23 +85,13 @@ export function AddMembersModal({ open, projectName, employees, departments, pos
       
       <div className="space-y-3">
         <SearchInput value={query} onChange={setQuery} label="Search employees" placeholder="Search employees..." />
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Select
-            hideLabel
-            label="Department"
-            value={departmentId}
-            onChange={(e) => {
-              setDepartmentId(e.target.value);
-              setPositionId('all');
-            }}
-            options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
-          
+        <div className="grid gap-3 sm:grid-cols-2">
           <Select
             hideLabel
             label="Position"
             value={positionId}
             onChange={(e) => setPositionId(e.target.value)}
-            options={[{ value: 'all', label: 'All Positions' }, ...positionOptions.map((p) => ({ value: p.id, label: p.name }))]} />
+            options={[{ value: 'all', label: 'All Positions' }, ...positions.map((p) => ({ value: p.id, label: p.name }))]} />
           
           <Select
             hideLabel
@@ -155,7 +138,7 @@ export function AddMembersModal({ open, projectName, employees, departments, pos
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-ink">{name}</span>
                       <span className="block truncate text-[13px] text-muted">
-                        {e.employeeNumber} · {findPosition(positions, e.positionId)?.name ?? '—'} · {findDepartment(departments, e.departmentId)?.name ?? '—'}
+                        {e.employeeNumber} · {findPosition(positions, e.positionId)?.name ?? 'No position'}
                       </span>
                     </span>
                     {reason && <span className="shrink-0 text-xs text-muted">{reason}</span>}

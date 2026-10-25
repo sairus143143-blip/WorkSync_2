@@ -58,7 +58,7 @@ export function AttendanceDetailsModal({ row: open, recentRows, onClose, onEdit 
               <h3 className="truncate text-base font-semibold text-ink">{row.fullName}</h3>
               <p className="text-[13px] tabular-nums text-muted">{row.employee.employeeNumber}</p>
               <p className="text-[13px] text-muted">
-                {row.position?.name ?? '—'} · {row.department?.name ?? '—'}
+                {row.position?.name ?? 'No position assigned'}
               </p>
             </div>
             <div className="ml-auto self-start">

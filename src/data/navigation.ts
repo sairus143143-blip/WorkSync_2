@@ -1,7 +1,6 @@
 import {
   BellIcon,
   BriefcaseIcon,
-  Building2Icon,
   CalendarCheckIcon,
   ClipboardListIcon,
   FileTextIcon,
@@ -13,7 +12,6 @@ import {
   ListChecksIcon,
   NetworkIcon,
   SettingsIcon,
-  ShieldCheckIcon,
   UserCogIcon,
   UserIcon,
   UsersRoundIcon } from
@@ -28,9 +26,7 @@ export const navigation: NavEntry[] = [
   icon: NetworkIcon,
   children: [
   { label: 'Employees', path: '/employees', icon: UsersRoundIcon, roles: ['admin'] },
-  { label: 'Departments', path: '/departments', icon: Building2Icon, roles: ['admin'] },
-  { label: 'Positions', path: '/positions', icon: BriefcaseIcon, roles: ['admin'] },
-  { label: 'Position Admin Assignment', path: '/position-admin-assignment', icon: ShieldCheckIcon, roles: ['admin'] }]
+  { label: 'Positions', path: '/positions', icon: BriefcaseIcon, roles: ['admin'] }]
 
 },
 { label: 'Attendance', path: '/attendance', icon: CalendarCheckIcon, roles: ['admin'] },

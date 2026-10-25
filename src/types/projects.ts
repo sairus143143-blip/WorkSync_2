@@ -1,18 +1,15 @@
-import type { Department } from './organization';
-
 /** Lifecycle status set by the admin. "Overdue" is a deadline condition, never a status. */
 export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
 
 /**
- * A project controlled by the single system administrator. Department and creator are
- * referenced by ID and resolved for display. Progress is managed manually until tasks exist.
+ * A project controlled by the single system administrator. Creator is referenced by ID.
+ * Progress is managed manually until tasks exist.
  */
 export interface Project {
   id: string;
   name: string;
   code: string;
   description: string;
-  departmentId: string;
   /** ISO date, yyyy-MM-dd */
   startDate: string;
   /** ISO date, yyyy-MM-dd */
@@ -28,7 +25,7 @@ export interface Project {
 
 export type ProjectMemberStatus = 'active' | 'removed';
 
-/** Project ↔ employee relationship. Names are resolved from employees/departments/positions. */
+/** Project ↔ employee relationship. Names are resolved from employee records. */
 export interface ProjectMember {
   id: string;
   projectId: string;
@@ -60,7 +57,6 @@ export type DeadlineState = 'upcoming' | 'due_soon' | 'overdue' | 'completed' | 
 
 export interface ProjectRow {
   project: Project;
-  department?: Department;
   memberCount: number;
   deadlineState: DeadlineState;
   /** Negative when overdue. */
@@ -71,7 +67,6 @@ export interface ProjectFormValues {
   name: string;
   code: string;
   description: string;
-  departmentId: string;
   startDate: string;
   deadline: string;
   status: ProjectStatus | '';
@@ -80,7 +75,7 @@ export interface ProjectFormValues {
 
 export type ProjectFormErrors = Partial<Record<keyof ProjectFormValues, string>>;
 
-export type ProjectSortKey = 'name' | 'code' | 'department' | 'startDate' | 'deadline' | 'progress' | 'status' | 'members';
+export type ProjectSortKey = 'name' | 'code' | 'startDate' | 'deadline' | 'progress' | 'status' | 'members';
 
 export type ProjectStatusFilter = 'all' | ProjectStatus;
 export type DeadlineFilter = 'all' | 'upcoming' | 'due_soon' | 'overdue' | 'completed';

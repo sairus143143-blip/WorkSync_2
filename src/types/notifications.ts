@@ -15,7 +15,7 @@ export interface AppNotification {
   dismissed?: boolean;
 }
 
-export type ActivityModule = 'Tasks' | 'Projects' | 'Users' | 'Employees' | 'Departments' | 'Positions' | 'Attendance' | 'Reports';
+export type ActivityModule = 'Tasks' | 'Projects' | 'Users' | 'Employees' | 'Positions' | 'Attendance' | 'Reports';
 
 export interface ActivityLog {
   id: string;

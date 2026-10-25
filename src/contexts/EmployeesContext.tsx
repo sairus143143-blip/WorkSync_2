@@ -20,7 +20,13 @@ function readEmployees(): Employee[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return seedEmployees;
     const parsed: unknown = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed as Employee[] : seedEmployees;
+    if (!Array.isArray(parsed)) return seedEmployees;
+    return parsed.map((record) => {
+      if (!record || typeof record !== 'object') return record;
+      return Object.fromEntries(
+        Object.entries(record).filter(([field]) => field !== 'departmentId' && field !== 'departmentName')
+      ) as unknown as Employee;
+    });
   } catch {
     return seedEmployees;
   }
@@ -34,7 +40,6 @@ function toRecordFields(values: EmployeeFormValues) {
     lastName: values.lastName.trim(),
     phone: values.phone.trim(),
     address: values.address.trim(),
-    departmentId: values.departmentId,
     positionId: values.positionId,
     dateHired: values.dateHired,
     employmentStatus: (values.employmentStatus || 'active') as EmploymentStatus,

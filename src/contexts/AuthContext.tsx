@@ -106,7 +106,6 @@ export function AuthProvider({ children }: {children: React.ReactNode;}) {
       address: '',
       avatar: null,
       employeeNumber: nextEmployeeNumber(employeeRecords),
-      departmentId: '',
       positionId: '',
       dateHired: today,
       employmentStatus: 'active'

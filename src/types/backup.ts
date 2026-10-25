@@ -1,6 +1,6 @@
 export const BACKUP_FORMAT_VERSION = 1;
 export const BACKUP_APP_ID = 'worksync';
-export const BACKUP_CATEGORIES = ['users', 'employees', 'departments', 'positions', 'adminAreas', 'positionAdminAssignments', 'attendance', 'projects', 'projectMembers', 'projectActivities', 'tasks', 'taskActivities', 'progressReports', 'notifications', 'activityLogs', 'settings'] as const;
+export const BACKUP_CATEGORIES = ['users', 'employees', 'positions', 'attendance', 'projects', 'projectMembers', 'projectActivities', 'tasks', 'taskActivities', 'progressReports', 'notifications', 'activityLogs', 'settings'] as const;
 export type BackupCategory = typeof BACKUP_CATEGORIES[number];
 export type ImportableCategory = 'notifications' | 'settings';
 

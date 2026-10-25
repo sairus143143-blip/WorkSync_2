@@ -1,8 +1,8 @@
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import type { Employee, EmployeeFormErrors, EmployeeFormValues, EmployeeView, EmploymentStatus } from '../types/employees';
-import type { Department, Position } from '../types/organization';
+import type { Position } from '../types/organization';
 import type { SystemUser } from '../types/users';
-import { findDepartment, findPosition } from './organization';
+import { findPosition } from './organization';
 import { formatConfiguredDate } from './settingsFormat';
 import { SYSTEM_ADMIN_EMAIL } from './users';
 
@@ -19,39 +19,23 @@ export function employeeFullName(e: Pick<Employee, 'firstName' | 'middleName' | 
   return [e.firstName, withMiddle ? e.middleName : '', e.lastName].filter(Boolean).join(' ');
 }
 
-/** Joins employee records with their account, department and position. No data is copied into the record. */
+/** Joins employee records with their account and position. No data is copied into the record. */
 export function buildEmployeeViews(
 list: Employee[],
 users: SystemUser[],
-departments: Department[],
 positions: Position[])
 : EmployeeView[] {
   return list.map((employee) => ({
     employee,
     user: users.find((u) => u.id === employee.userId),
-    department: findDepartment(departments, employee.departmentId),
     position: findPosition(positions, employee.positionId),
     fullName: employeeFullName(employee)
   }));
 }
 
-/**
- * Departments selectable in the employee form: active ones, plus the employee's
- * current (historical) department when editing, even if it is now inactive.
- */
-export function assignableDepartments(departments: Department[], currentId?: string): Department[] {
-  return departments.filter((d) => d.status === 'active' || d.id === currentId);
-}
-
-/** Active positions in the department, plus the employee's current position when it belongs there. */
-export function assignablePositions(positions: Position[], departments: Department[], departmentId: string, currentId?: string): Position[] {
-  if (!departmentId) return [];
-  const department = findDepartment(departments, departmentId);
-  return positions.filter(
-    (p) =>
-    p.departmentId === departmentId && (
-    p.id === currentId || p.status === 'active' && department?.status === 'active')
-  );
+/** Active positions, plus the employee's current position when editing. */
+export function assignablePositions(positions: Position[], currentId?: string): Position[] {
+  return positions.filter((position) => position.status === 'active' || position.id === currentId);
 }
 
 export function summarizeEmployees(list: Employee[], now: Date = new Date()) {
@@ -92,7 +76,6 @@ const PHONE_PATTERN = /^[+\d][\d\s-]{6,}$/;
 export interface EmployeeValidationContext {
   employees: Employee[];
   users: SystemUser[];
-  departments: Department[];
   positions: Position[];
   /** Present when editing — the record's original values. */
   editing?: Employee;
@@ -125,17 +108,9 @@ export function validateEmployeeForm(values: EmployeeFormValues, ctx: EmployeeVa
   if (ctx.employees.some((e) => e.employeeNumber.toUpperCase() === number && e.id !== editing?.id))
   errors.employeeNumber = 'Employee number already exists.';
 
-  const department = findDepartment(ctx.departments, values.departmentId);
-  if (!values.departmentId) errors.departmentId = 'Please select a department.';else
-  if (!department) errors.departmentId = 'The selected department no longer exists.';else
-  if (department.status === 'inactive' && department.id !== editing?.departmentId)
-  errors.departmentId = 'Inactive departments cannot be used for new assignments.';
-
-  const position = findPosition(ctx.positions, values.positionId);
-  if (!values.positionId) errors.positionId = 'Please select a position.';else
-  if (!position) errors.positionId = 'The selected position no longer exists.';else
-  if (position.departmentId !== values.departmentId) errors.positionId = 'This position belongs to a different department.';else
-  if (position.status === 'inactive' && position.id !== editing?.positionId)
+  const position = values.positionId ? findPosition(ctx.positions, values.positionId) : undefined;
+  if (values.positionId && !position) errors.positionId = 'The selected position no longer exists.';else
+  if (position?.status === 'inactive' && position.id !== editing?.positionId)
   errors.positionId = 'Inactive positions cannot be used for new assignments.';
 
   if (!values.dateHired) errors.dateHired = 'Date hired is required.';

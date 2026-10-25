@@ -40,12 +40,6 @@ export function AttendanceTable({ rows, sort, onSort, onView, onEdit }: Attendan
     render: (r) => <span className="whitespace-nowrap tabular-nums text-muted">{r.employee.employeeNumber}</span>
   },
   {
-    key: 'department',
-    header: 'Department',
-    hideBelow: 'md',
-    render: (r) => <span className="whitespace-nowrap">{r.department?.name ?? '—'}</span>
-  },
-  {
     key: 'position',
     header: 'Position',
     hideBelow: 'lg',

@@ -1,5 +1,5 @@
 import type { Employee } from './employees';
-import type { Department, Position } from './organization';
+import type { Position } from './organization';
 import type { Project } from './projects';
 import type { SortState } from './organization';
 
@@ -75,7 +75,6 @@ export interface TaskRow {
   task: Task;
   project: Project;
   employee: Employee;
-  department: Department | undefined;
   position: Position | undefined;
   employeeName: string;
   overdue: boolean;

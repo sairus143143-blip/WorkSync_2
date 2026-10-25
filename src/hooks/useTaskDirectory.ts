@@ -13,7 +13,6 @@ export function useTaskDirectory({ rows }: Options) {
   const [priority, setPriority] = useState<TaskPriorityFilter>('all');
   const [projectId, setProjectId] = useState('all');
   const [employeeId, setEmployeeId] = useState('all');
-  const [departmentId, setDepartmentId] = useState('all');
   const [deadline, setDeadline] = useState<TaskDeadlineFilter>('all');
   const [sort, setSort] = useState<TaskSort>({ key: 'dueDate', direction: 'asc' });
 
@@ -24,14 +23,13 @@ export function useTaskDirectory({ rows }: Options) {
       if (priority !== 'all' && row.task.priority !== priority) return false;
       if (projectId !== 'all' && row.task.projectId !== projectId) return false;
       if (employeeId !== 'all' && row.task.assignedEmployeeId !== employeeId) return false;
-      if (departmentId !== 'all' && row.employee.departmentId !== departmentId) return false;
       if (!matchesDeadlineFilter(row, deadline)) return false;
       if (q && !taskSearchText(row).toLowerCase().includes(q)) return false;
       return true;
     });
     const factor = sort.direction === 'asc' ? 1 : -1;
     return [...filtered].sort((a, b) => compareTaskRows(a, b, sort.key) * factor);
-  }, [rows, query, status, priority, projectId, employeeId, departmentId, deadline, sort]);
+  }, [rows, query, status, priority, projectId, employeeId, deadline, sort]);
 
   const toggleSort = (key: string) => {
     const nextKey = key as TaskSortKey;
@@ -48,7 +46,6 @@ export function useTaskDirectory({ rows }: Options) {
     priority !== 'all' ||
     projectId !== 'all' ||
     employeeId !== 'all' ||
-    departmentId !== 'all' ||
     deadline !== 'all';
 
   const clearFilters = () => {
@@ -57,7 +54,6 @@ export function useTaskDirectory({ rows }: Options) {
     setPriority('all');
     setProjectId('all');
     setEmployeeId('all');
-    setDepartmentId('all');
     setDeadline('all');
   };
 
@@ -72,8 +68,6 @@ export function useTaskDirectory({ rows }: Options) {
     setProjectId,
     employeeId,
     setEmployeeId,
-    departmentId,
-    setDepartmentId,
     deadline,
     setDeadline,
     sort,

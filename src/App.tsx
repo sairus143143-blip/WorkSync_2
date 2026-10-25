@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -12,7 +11,6 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { EmployeesProvider } from './contexts/EmployeesContext';
 import { OrganizationProvider } from './contexts/OrganizationContext';
-import { AssignmentsProvider } from './contexts/AssignmentsContext';
 import { UsersProvider } from './contexts/UsersContext';
 import { AttendanceProvider } from './contexts/AttendanceContext';
 import { ProjectsProvider } from './contexts/ProjectsContext';
@@ -23,14 +21,12 @@ import { Attendance } from './pages/Attendance';
 import { ActivityLogs } from './pages/ActivityLogs';
 import { Dashboard } from './pages/Dashboard';
 import { DataManagement } from './pages/DataManagement';
-import { Departments } from './pages/Departments';
 import { Employees } from './pages/Employees';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Login } from './pages/Login';
 import { SignUp } from './pages/SignUp';
 import { NotFound } from './pages/NotFound';
 import { Notifications } from './pages/Notifications';
-import { PositionAdminAssignment } from './pages/PositionAdminAssignment';
 import { Positions } from './pages/Positions';
 import { Productivity } from './pages/Productivity';
 import { Profile } from './pages/Profile';
@@ -45,7 +41,7 @@ import { WeeklyReports } from './pages/WeeklyReports';
 import { Users } from './pages/Users';
 
 interface AppProps {
-  /** Prototype control: management pages (Employees, Departments, Positions, Assignments, Attendance, Projects) fail their first load so error states can be reviewed. */
+  /** Prototype control: management pages (Employees, Positions, Attendance, Projects) fail their first load so error states can be reviewed. */
   simulateLoadErrors?: boolean;
 }
 
@@ -68,7 +64,6 @@ export function App({ simulateLoadErrors = false }: AppProps) {
                 <SettingsProvider>
                   <NotificationProvider>
                     <ActivityProvider>
-                    <AssignmentsProvider>
                       <AttendanceProvider>
                         <ProjectsProvider>
                           <TasksProvider>
@@ -88,16 +83,8 @@ export function App({ simulateLoadErrors = false }: AppProps) {
                                 element={<RoleRoute allow={['admin']}><Employees simulateLoadError={simulateLoadErrors} /></RoleRoute>} />
                               
                   <Route
-                                path="/departments"
-                                element={<RoleRoute allow={['admin']}><Departments simulateLoadError={simulateLoadErrors} /></RoleRoute>} />
-                              
-                  <Route
                                 path="/positions"
                                 element={<RoleRoute allow={['admin']}><Positions simulateLoadError={simulateLoadErrors} /></RoleRoute>} />
-                              
-                  <Route
-                                path="/position-admin-assignment"
-                                element={<RoleRoute allow={['admin']}><PositionAdminAssignment simulateLoadError={simulateLoadErrors} /></RoleRoute>} />
                               
                   <Route
                                 path="/attendance"
@@ -130,7 +117,6 @@ export function App({ simulateLoadErrors = false }: AppProps) {
                           </TasksProvider>
                         </ProjectsProvider>
                       </AttendanceProvider>
-                    </AssignmentsProvider>
                     </ActivityProvider>
                 </NotificationProvider>
                 </SettingsProvider>

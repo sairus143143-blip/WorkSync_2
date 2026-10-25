@@ -11,7 +11,6 @@ import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Tabs, tabPanelProps } from '../components/ui/Tabs';
-import { useOrganization } from '../contexts/OrganizationContext';
 import { useProjects } from '../contexts/ProjectsContext';
 import { useUsers } from '../contexts/UsersContext';
 import { useSimulatedLoad } from '../hooks/useSimulatedLoad';
@@ -32,12 +31,11 @@ export function Projects({ simulateLoadError = false }: ProjectsProps) {
   const setView = (next: ProjectsView) => setParams(next === 'all' ? { view: 'all' } : {}, { replace: true });
 
   const { projects, members, activities } = useProjects();
-  const { departments } = useOrganization();
   const { users } = useUsers();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
   const actions = useProjectActions({ onCreated: (p) => navigate(`/projects/${p.id}`) });
 
-  const rows = useMemo(() => buildProjectRows(projects, departments, members), [projects, departments, members]);
+  const rows = useMemo(() => buildProjectRows(projects, members), [projects, members]);
   const leadName = useCallback(
     (createdBy: string) => {
       const u = users.find((x) => x.id === createdBy);
@@ -53,7 +51,7 @@ export function Projects({ simulateLoadError = false }: ProjectsProps) {
     <div className="space-y-6">
       <PageHeader
         title="Project Management"
-        description="Create, manage, assign, and monitor organizational projects."
+        description="Create, assign, and monitor projects, team members, and deadlines."
         actions={
         <Button leftIcon={<PlusIcon className="h-4 w-4" />} onClick={actions.openCreate}>
             Create Project
@@ -93,7 +91,6 @@ export function Projects({ simulateLoadError = false }: ProjectsProps) {
 
             <ProjectListPanel
               rows={rows}
-              departments={departments}
               leadName={leadName}
               onCreate={actions.openCreate}
               onView={openProject}

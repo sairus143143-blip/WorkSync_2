@@ -11,7 +11,7 @@ import { Modal } from '../components/ui/Modal';
 import { formatConfiguredDateTime } from '../utils/settingsFormat';
 
 const stamp = (value: string) => formatConfiguredDateTime(value);
-const modules = ['Tasks', 'Projects', 'Users', 'Employees', 'Departments', 'Positions', 'Attendance', 'Reports'];
+const modules = ['Tasks', 'Projects', 'Users', 'Employees', 'Positions', 'Attendance', 'Reports'];
 
 export function ActivityLogs() {
   const { logs } = useActivity();

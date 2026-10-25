@@ -3,7 +3,7 @@ import { LockIcon } from 'lucide-react';
 import { useEmployees } from '../../contexts/EmployeesContext';
 import type { SystemUser } from '../../types/users';
 import { useOrganization } from '../../contexts/OrganizationContext';
-import { findDepartment, findPosition } from '../../utils/organization';
+import { findPosition } from '../../utils/organization';
 import { displayName, formatCreatedDate, formatLastActivity, isSystemAdmin, PROTECTED_ACCOUNT_MESSAGE } from '../../utils/users';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -42,7 +42,7 @@ export function UserDetailsModal({ user: openUser, onClose, onEdit }: UserDetail
   const user = openUser ?? lastUser.current;
   const admin = user ? isSystemAdmin(user) : false;
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const record = user ? employees.find((e) => e.userId === user.id) : undefined;
 
   return (
@@ -107,7 +107,6 @@ export function UserDetailsModal({ user: openUser, onClose, onEdit }: UserDetail
         record &&
         <Section title="Employee information">
                 <Field label="Employee number">{record.employeeNumber}</Field>
-                <Field label="Department">{findDepartment(departments, record.departmentId)?.name ?? '—'}</Field>
                 <Field label="Position">{findPosition(positions, record.positionId)?.name ?? '—'}</Field>
               </Section>
 

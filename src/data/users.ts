@@ -3,7 +3,7 @@ import type { SystemUser } from '../types/users';
 /**
  * Centralized mock user accounts. Replace with an API response later.
  * RULE: exactly one object may have role "admin" — the protected system administrator.
- * Workforce details (department, position, contact info) live in data/employees.ts, linked by userId.
+ * Workforce details (position and contact info) live in data/employees.ts, linked by userId.
  */
 export const users: SystemUser[] = [
 { id: 'USR-001', firstName: 'Admin', lastName: 'General', email: 'admin@worksync.test', role: 'admin', status: 'active', createdAt: '2026-01-01', lastActivity: '2026-10-04T08:00:00', mockPassword: 'admin123' },

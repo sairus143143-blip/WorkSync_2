@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { CalendarOffIcon, SearchXIcon } from 'lucide-react';
 import type { AttendanceRow, AttendanceStatusFilter, DailySortKey } from '../../types/attendance';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import { useTableDirectory } from '../../hooks/useTableDirectory';
 import { ATTENDANCE_STATUSES, ATTENDANCE_STATUS_LABELS, formatAttendanceDate, isWorkingDay } from '../../utils/attendance';
 import { Button } from '../ui/Button';
@@ -17,7 +17,6 @@ interface DailyAttendancePanelProps {
   rows: AttendanceRow[];
   date: string;
   today: string;
-  departments: Department[];
   positions: Position[];
   onDateChange: (date: string) => void;
   onView: (row: AttendanceRow) => void;
@@ -42,22 +41,15 @@ function compareRows(a: AttendanceRow, b: AttendanceRow, key: DailySortKey) {
 
 const searchText = (r: AttendanceRow) => `${r.fullName} ${r.employee.employeeNumber}`;
 
-export function DailyAttendancePanel({ rows, date, today, departments, positions, onDateChange, onView, onEdit }: DailyAttendancePanelProps) {
+export function DailyAttendancePanel({ rows, date, today, positions, onDateChange, onView, onEdit }: DailyAttendancePanelProps) {
   const [status, setStatus] = useState<AttendanceStatusFilter>('all');
-  const [departmentId, setDepartmentIdState] = useState('all');
   const [positionId, setPositionId] = useState('all');
-
-  const setDepartmentId = (next: string) => {
-    setDepartmentIdState(next);
-    if (next !== 'all' && positionId !== 'all' && positions.find((p) => p.id === positionId)?.departmentId !== next) setPositionId('all');
-  };
 
   const matches = useCallback(
     (r: AttendanceRow) =>
     (status === 'all' || r.status === status) && (
-    departmentId === 'all' || r.employee.departmentId === departmentId) && (
     positionId === 'all' || r.employee.positionId === positionId),
-    [status, departmentId, positionId]
+    [status, positionId]
   );
   const directory = useTableDirectory<AttendanceRow, DailySortKey>({
     rows,
@@ -68,15 +60,13 @@ export function DailyAttendancePanel({ rows, date, today, departments, positions
     descFirst: ['hours']
   });
 
-  const hasFilters = directory.query.trim() !== '' || status !== 'all' || departmentId !== 'all' || positionId !== 'all';
+  const hasFilters = directory.query.trim() !== '' || status !== 'all' || positionId !== 'all';
   const clearFilters = () => {
     directory.setQuery('');
     setStatus('all');
-    setDepartmentIdState('all');
     setPositionId('all');
   };
 
-  const positionOptions = departmentId === 'all' ? positions : positions.filter((p) => p.departmentId === departmentId);
   const nonWorkingDay = rows.length === 0 && !isWorkingDay(date);
 
   return (
@@ -92,7 +82,7 @@ export function DailyAttendancePanel({ rows, date, today, departments, positions
               placeholder="Search employee..."
               className="xl:max-w-xs" />
             
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:flex xl:items-center">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:items-center">
               <Select
                 hideLabel
                 label="Status"
@@ -103,19 +93,11 @@ export function DailyAttendancePanel({ rows, date, today, departments, positions
               
               <Select
                 hideLabel
-                label="Department"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
-                className="xl:w-52"
-                options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
-              
-              <Select
-                hideLabel
                 label="Position"
                 value={positionId}
                 onChange={(e) => setPositionId(e.target.value)}
                 className="xl:w-52"
-                options={[{ value: 'all', label: 'All Positions' }, ...positionOptions.map((p) => ({ value: p.id, label: p.name }))]} />
+                options={[{ value: 'all', label: 'All Positions' }, ...positions.map((p) => ({ value: p.id, label: p.name }))]} />
               
             </div>
             <div className="flex items-center gap-3 xl:ml-auto">

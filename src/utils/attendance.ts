@@ -8,9 +8,9 @@ import type {
   WorkSchedule } from
 '../types/attendance';
 import type { Employee } from '../types/employees';
-import type { Department, Position } from '../types/organization';
+import type { Position } from '../types/organization';
 import { employeeFullName } from './employees';
-import { findDepartment, findPosition } from './organization';
+import { findPosition } from './organization';
 import { formatConfiguredDate, formatConfiguredTime } from './settingsFormat';
 
 export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
@@ -100,7 +100,6 @@ export function isEligibleOn(employee: Employee, date: string): boolean {
 interface RowContext {
   employees: Employee[];
   records: AttendanceRecord[];
-  departments: Department[];
   positions: Position[];
   schedule: WorkSchedule;
 }
@@ -114,7 +113,6 @@ function toRow(employee: Employee, date: string, record: AttendanceRecord | unde
     date,
     employee,
     fullName: employeeFullName(employee),
-    department: findDepartment(ctx.departments, employee.departmentId),
     position: findPosition(ctx.positions, employee.positionId),
     record,
     derived: !record,

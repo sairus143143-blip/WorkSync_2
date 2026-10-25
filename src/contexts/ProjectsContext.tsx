@@ -34,7 +34,6 @@ function toFields(values: ProjectFormValues) {
     name: values.name.trim(),
     code: values.code.trim().toUpperCase(),
     description: values.description.trim(),
-    departmentId: values.departmentId,
     startDate: values.startDate,
     deadline: values.deadline,
     status,
@@ -95,7 +94,7 @@ export function ProjectsProvider({ children }: {children: React.ReactNode;}) {
       setProjects((current) => current.map((p) => p.id === id ? { ...p, ...fields, updatedAt: projectNowIso() } : p));
 
       const entries: Array<[ProjectActivityAction, string]> = [];
-      const detailsChanged = (['name', 'code', 'description', 'departmentId', 'startDate', 'deadline'] as const).some(
+      const detailsChanged = (['name', 'code', 'description', 'startDate', 'deadline'] as const).some(
         (key) => existing[key] !== fields[key]
       );
       if (detailsChanged) entries.push(['project_updated', 'Admin updated the project details.']);

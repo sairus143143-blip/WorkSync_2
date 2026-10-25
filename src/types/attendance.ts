@@ -1,5 +1,5 @@
 import type { Employee } from './employees';
-import type { Department, Position } from './organization';
+import type { Position } from './organization';
 
 export type AttendanceStatus = 'present' | 'late' | 'absent' | 'on_leave' | 'half_day' | 'incomplete';
 
@@ -37,7 +37,6 @@ export interface AttendanceRow {
   date: string;
   employee: Employee;
   fullName: string;
-  department?: Department;
   position?: Position;
   record?: AttendanceRecord;
   derived: boolean;

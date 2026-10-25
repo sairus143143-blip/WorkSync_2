@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import type { Employee } from '../types/employees';
-import type { Department, Position } from '../types/organization';
+import type { Position } from '../types/organization';
 import type { Project, ProjectMember } from '../types/projects';
 import type {
   ProjectTaskStats,
@@ -16,7 +16,7 @@ import type {
   TaskSummaryStats } from
 '../types/tasks';
 import { employeeFullName } from './employees';
-import { findDepartment, findPosition } from './organization';
+import { findPosition } from './organization';
 import { PROJECT_TODAY, DUE_SOON_DAYS, projectNowIso } from './projects';
 import { formatConfiguredDate } from './settingsFormat';
 
@@ -167,7 +167,6 @@ export function buildTaskRow(
   task: Task,
   projects: Project[],
   employees: Employee[],
-  departments: Department[],
   positions: Position[],
   today = PROJECT_TODAY
 ): TaskRow | null {
@@ -178,7 +177,6 @@ export function buildTaskRow(
     task,
     project,
     employee,
-    department: findDepartment(departments, employee.departmentId),
     position: findPosition(positions, employee.positionId),
     employeeName: employeeFullName(employee),
     overdue: isTaskOverdue(task, today),
@@ -191,11 +189,10 @@ export function buildTaskRows(
   tasks: Task[],
   projects: Project[],
   employees: Employee[],
-  departments: Department[],
   positions: Position[],
   today = PROJECT_TODAY
 ): TaskRow[] {
-  return tasks.map((t) => buildTaskRow(t, projects, employees, departments, positions, today)).filter((r): r is TaskRow => r !== null);
+  return tasks.map((t) => buildTaskRow(t, projects, employees, positions, today)).filter((r): r is TaskRow => r !== null);
 }
 
 export function compareTaskRows(a: TaskRow, b: TaskRow, key: TaskSortKey): number {

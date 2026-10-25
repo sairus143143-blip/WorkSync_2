@@ -1,15 +1,15 @@
-import type { Department, Position } from './organization';
+import type { Position } from './organization';
 import type { SystemUser } from './users';
 
-export type { Department, Position } from './organization';
+export type { Position } from './organization';
 
 /** Workforce status — separate from the user account's access status. */
 export type EmploymentStatus = 'active' | 'on_leave' | 'inactive';
 
 /**
  * Workforce record. Account data (email, role, account status, last activity)
- * belongs to the linked SystemUser via userId. Department and position names are
- * resolved through departmentId / positionId and never copied here.
+ * belongs to the linked SystemUser via userId. Position names are resolved through
+ * positionId and never copied here.
  */
 export interface Employee {
   id: string;
@@ -20,7 +20,6 @@ export interface Employee {
   lastName: string;
   phone: string;
   address: string;
-  departmentId: string;
   positionId: string;
   /** ISO date */
   dateHired: string;
@@ -28,11 +27,10 @@ export interface Employee {
   avatar: string | null;
 }
 
-/** Read-only join of an employee with its account, department and position for display. */
+/** Read-only join of an employee with its account and position for display. */
 export interface EmployeeView {
   employee: Employee;
   user?: SystemUser;
-  department?: Department;
   position?: Position;
   fullName: string;
 }
@@ -48,7 +46,6 @@ export interface EmployeeFormValues {
   address: string;
   avatar: string | null;
   employeeNumber: string;
-  departmentId: string;
   positionId: string;
   dateHired: string;
   employmentStatus: EmploymentStatus | '';
@@ -56,7 +53,7 @@ export interface EmployeeFormValues {
 
 export type EmployeeFormErrors = Partial<Record<keyof EmployeeFormValues, string>>;
 
-export type EmployeeSortKey = 'name' | 'employeeNumber' | 'department' | 'position' | 'dateHired' | 'status';
+export type EmployeeSortKey = 'name' | 'employeeNumber' | 'position' | 'dateHired' | 'status';
 
 export interface EmployeeSort {
   key: EmployeeSortKey;

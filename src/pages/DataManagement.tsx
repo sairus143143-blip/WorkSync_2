@@ -3,7 +3,6 @@ import { ArchiveIcon, DownloadIcon, FileUpIcon, RefreshCwIcon, ShieldCheckIcon, 
 import { useUsers } from '../contexts/UsersContext';
 import { useEmployees } from '../contexts/EmployeesContext';
 import { useOrganization } from '../contexts/OrganizationContext';
-import { useAssignments } from '../contexts/AssignmentsContext';
 import { useAttendance } from '../contexts/AttendanceContext';
 import { useProjects } from '../contexts/ProjectsContext';
 import { useTasks } from '../contexts/TasksContext';
@@ -12,7 +11,6 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useActivity } from '../contexts/ActivityContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useToast } from '../contexts/ToastContext';
-import { adminAreas } from '../data/adminAreas';
 import { BACKUP_CATEGORIES, BACKUP_FORMAT_VERSION, type BackupCategory, type DataOperation, type ImportableCategory, type WorkSyncBackup } from '../types/backup';
 import type { AppNotification } from '../types/notifications';
 import type { WorkSyncSettings } from '../types/settings';
@@ -38,8 +36,7 @@ function readHistory(): DataOperation[] {
 export function DataManagement() {
   const { users } = useUsers();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
-  const { assignments } = useAssignments();
+  const { positions } = useOrganization();
   const { records: attendance } = useAttendance();
   const { projects, members, activities: projectActivities } = useProjects();
   const { tasks, activities: taskActivities } = useTasks();
@@ -61,10 +58,7 @@ export function DataManagement() {
   const exportData: WorkSyncBackup['data'] = useMemo(() => ({
     users: users.map((user) => { const safe = { ...user }; delete safe.mockPassword; return safe; }),
     employees,
-    departments,
     positions,
-    adminAreas,
-    positionAdminAssignments: assignments,
     attendance,
     projects,
     projectMembers: members,
@@ -75,7 +69,7 @@ export function DataManagement() {
     notifications,
     activityLogs: logs,
     settings: { ...settings }
-  }), [users, employees, departments, positions, assignments, attendance, projects, members, projectActivities, tasks, taskActivities, progressReports, notifications, logs, settings]);
+  }), [users, employees, positions, attendance, projects, members, projectActivities, tasks, taskActivities, progressReports, notifications, logs, settings]);
   const categoryCounts = useMemo(() => BACKUP_CATEGORIES.map((category) => ({ category, count: countRecords(exportData[category]) })), [exportData]);
 
   const track = (type: DataOperation['type'], categories: string[], result: DataOperation['result'], recordCount: number) => {
@@ -193,7 +187,7 @@ export function DataManagement() {
       <Card title="Export data" description="Download a versioned JSON snapshot of supported mock records. User passwords and credentials are excluded." action={<ArchiveIcon className="h-5 w-5 text-primary" />}>
         <div className="flex flex-wrap gap-2"><Button onClick={exportJson} leftIcon={<DownloadIcon className="h-4 w-4" />}>Export all data (JSON)</Button></div>
         <p className="mt-4 text-xs text-muted">Full export includes {BACKUP_CATEGORIES.length} data categories. Exports are manual browser downloads, not automatic or server backups.</p>
-        <details className="mt-4 rounded-lg border border-line"><summary className="cursor-pointer px-3 py-2 text-sm font-medium text-ink">Individual CSV exports</summary><div className="flex flex-wrap gap-2 border-t border-line p-3">{(['users', 'employees', 'departments', 'positions', 'attendance', 'projects', 'tasks', 'notifications'] as BackupCategory[]).map((category) => <Button key={category} size="sm" variant="secondary" onClick={() => exportCsv(category)}><DownloadIcon className="mr-1.5 h-3.5 w-3.5" />{category}</Button>)}</div></details>
+        <details className="mt-4 rounded-lg border border-line"><summary className="cursor-pointer px-3 py-2 text-sm font-medium text-ink">Individual CSV exports</summary><div className="flex flex-wrap gap-2 border-t border-line p-3">{(['users', 'employees', 'positions', 'attendance', 'projects', 'tasks', 'notifications'] as BackupCategory[]).map((category) => <Button key={category} size="sm" variant="secondary" onClick={() => exportCsv(category)}><DownloadIcon className="mr-1.5 h-3.5 w-3.5" />{category}</Button>)}</div></details>
       </Card>
       <Card title="Import data" description="Validate first, preview selected categories, then confirm replacement." action={<FileUpIcon className="h-5 w-5 text-primary" />}>
         <input ref={inputRef} type="file" accept="application/json,.json" aria-label="Select WorkSync backup JSON file" onChange={(event) => void onFile(event.target.files?.[0])} className="block w-full rounded-lg border border-line bg-surface p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary-soft file:px-3 file:py-1.5 file:font-medium file:text-primary" />
@@ -202,7 +196,7 @@ export function DataManagement() {
         {importBackup && <div className="mt-4 space-y-3 rounded-lg border border-line bg-bg p-4"><div><p className="text-sm font-semibold text-ink">Import preview</p><p className="mt-1 text-xs text-muted">Format v{BACKUP_FORMAT_VERSION} · Exported {new Date(importBackup.metadata.exportedAt).toLocaleString()}</p></div><div className="space-y-2">{IMPORTABLE_CATEGORIES.filter((category) => importBackup.metadata.categories.includes(category)).map((category) => <label key={category} className="flex items-center justify-between gap-3 rounded-md bg-surface px-3 py-2 text-sm"><span className="flex items-center gap-2"><input type="checkbox" checked={chosen.includes(category)} onChange={(event) => toggleCategory(category, event.target.checked)} className="h-4 w-4 accent-[#181B99]" />Replace {category}</span><span className="text-xs text-muted">{importedCount(category)} records</span></label>)}</div><Button onClick={prepareImport} disabled={!chosen.length || Boolean(error)} leftIcon={<UploadIcon className="h-4 w-4" />}>Review and apply selected</Button></div>}
       </Card>
       <Card title="Restore default demo data" description="Reinitialize seeded mock records and discard unsaved in-memory changes." action={<RefreshCwIcon className="h-5 w-5 text-warning" />}>
-        <p className="text-sm leading-relaxed text-muted">This reloads the app with source-defined demo users, employees, departments, positions, attendance, projects, tasks, weekly reports, notifications, and activity. The signed-in Admin session, System Settings, and data-management history are preserved.</p>
+        <p className="text-sm leading-relaxed text-muted">This reloads the app with source-defined demo users, employees, positions, attendance, projects, tasks, weekly reports, notifications, and activity. The signed-in Admin session, System Settings, and data-management history are preserved.</p>
         <Button className="mt-4" variant="secondary" onClick={() => setRestoreConfirm({ title: 'Restore default demo data?', message: 'All in-memory mock data changes will be lost. The seeded Admin remains intact. Your System Settings and Admin session will be preserved.', confirmLabel: 'Restore demo data' })} leftIcon={<RefreshCwIcon className="h-4 w-4" />}>Restore default demo data</Button>
       </Card>
       <Card title="Data overview" description="Current records in application state. Derived reports are not counted as stored records." action={<ShieldCheckIcon className="h-5 w-5 text-primary" />}>

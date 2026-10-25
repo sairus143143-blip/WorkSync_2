@@ -1,10 +1,10 @@
 import React, { forwardRef } from 'react';
 import { UserMinusIcon, UserPlusIcon, UsersRoundIcon } from 'lucide-react';
 import type { Employee } from '../../types/employees';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import type { ProjectMember } from '../../types/projects';
 import { employeeFullName, employmentStatusLabels } from '../../utils/employees';
-import { findDepartment, findPosition } from '../../utils/organization';
+import { findPosition } from '../../utils/organization';
 import { formatProjectDate } from '../../utils/projects';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
@@ -18,22 +18,20 @@ interface MemberRow {
   member: ProjectMember;
   employee: Employee;
   name: string;
-  department?: Department;
   position?: Position;
 }
 
 interface ProjectMembersCardProps {
   members: ProjectMember[];
   employees: Employee[];
-  departments: Department[];
   positions: Position[];
-  summary: {teamMembers: number;activeMembers: number;departments: number;};
+  summary: {teamMembers: number;activeMembers: number;};
   onAdd: () => void;
   onRemove: (member: ProjectMember, name: string) => void;
 }
 
 export const ProjectMembersCard = forwardRef<HTMLDivElement, ProjectMembersCardProps>(function ProjectMembersCard(
-{ members, employees, departments, positions, summary, onAdd, onRemove },
+{ members, employees, positions, summary, onAdd, onRemove },
 ref)
 {
   const rows: MemberRow[] = members.
@@ -44,7 +42,6 @@ ref)
       member,
       employee,
       name: employeeFullName(employee),
-      department: findDepartment(departments, employee.departmentId),
       position: findPosition(positions, employee.positionId)
     };
   }).
@@ -65,7 +62,6 @@ ref)
         </div>
 
   },
-  { key: 'department', header: 'Department', hideBelow: 'md', render: (r) => <span className="whitespace-nowrap">{r.department?.name ?? '—'}</span> },
   { key: 'position', header: 'Position', hideBelow: 'lg', render: (r) => <span className="whitespace-nowrap text-muted">{r.position?.name ?? '—'}</span> },
   {
     key: 'assigned',
@@ -110,11 +106,10 @@ ref)
           </Button>
         }>
         
-        <dl className="grid grid-cols-3 gap-4 px-5 pb-4">
+        <dl className="grid grid-cols-2 gap-4 px-5 pb-4">
           {[
           ['Team Members', summary.teamMembers],
-          ['Active Members', summary.activeMembers],
-          ['Departments Represented', summary.departments]].
+          ['Active Members', summary.activeMembers]].
           map(([label, value]) =>
           <div key={label}>
               <dt className="text-xs text-muted">{label}</dt>

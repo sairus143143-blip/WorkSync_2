@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import type { Department } from '../../types/organization';
 import type { Project, ProjectFormErrors, ProjectFormValues } from '../../types/projects';
 import { validateProject } from '../../utils/projects';
 
@@ -8,12 +7,11 @@ interface Options {
   initial: ProjectFormValues;
   resetKey: string;
   projects: Project[];
-  departments: Department[];
   editing?: Project;
 }
 
 /** Form state for Create / Edit Project. Completing a project locks progress at 100%. */
-export function useProjectForm({ open, initial, resetKey, projects, departments, editing }: Options) {
+export function useProjectForm({ open, initial, resetKey, projects, editing }: Options) {
   const [values, setValues] = useState<ProjectFormValues>(initial);
   const [errors, setErrors] = useState<ProjectFormErrors>({});
   const [submitted, setSubmitted] = useState(false);
@@ -26,7 +24,7 @@ export function useProjectForm({ open, initial, resetKey, projects, departments,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, resetKey]);
 
-  const ctx = { projects, departments, editing };
+  const ctx = { projects, editing };
 
   const setField = <K extends keyof ProjectFormValues,>(field: K, value: ProjectFormValues[K]) => {
     const next = { ...values, [field]: value };

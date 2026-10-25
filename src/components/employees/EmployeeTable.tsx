@@ -51,7 +51,6 @@ export function EmployeeTable({ rows, sort, onSort, onView, onEdit, onChangeStat
     hideBelow: 'sm',
     render: (v) => <span className="whitespace-nowrap font-medium tabular-nums">{v.employee.employeeNumber}</span>
   },
-  { key: 'department', header: 'Department', sortKey: 'department', hideBelow: 'md', render: (v) => v.department?.name ?? '—' },
   {
     key: 'position',
     header: 'Position',

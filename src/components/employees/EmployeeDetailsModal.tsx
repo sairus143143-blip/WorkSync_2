@@ -64,7 +64,7 @@ export function EmployeeDetailsModal({ view: openView, onClose, onEdit }: Employ
             <div className="min-w-0">
               <p className="truncate text-base font-semibold text-ink">{employeeFullName(view.employee, true)}</p>
               <p className="truncate text-sm text-muted">
-                {view.position?.name ?? '—'} · {view.department?.name ?? '—'}
+                {view.position?.name ?? 'No position assigned'}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge tone="primary" className="tabular-nums">
@@ -83,7 +83,6 @@ export function EmployeeDetailsModal({ view: openView, onClose, onEdit }: Employ
 
           <Section title="Employment information">
             <Field label="Employee number">{view.employee.employeeNumber}</Field>
-            <Field label="Department">{view.department?.name ?? '—'}</Field>
             <Field label="Position">{view.position?.name ?? '—'}</Field>
             <Field label="Date hired">{formatDateHired(view.employee.dateHired)}</Field>
             <Field label="Employment status">

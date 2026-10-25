@@ -39,18 +39,6 @@ export function ProjectTable({ rows, leadName, sort, onSort, onView, onEdit, onM
 
   },
   { key: 'code', header: 'Project Code', sortKey: 'code', hideBelow: 'md', render: (r) => <span className="whitespace-nowrap tabular-nums text-muted">{r.project.code}</span> },
-  {
-    key: 'department',
-    header: 'Department',
-    sortKey: 'department',
-    hideBelow: 'lg',
-    render: (r) =>
-    <span className="whitespace-nowrap">
-          {r.department?.name ?? '—'}
-          {r.department?.status === 'inactive' && <span className="ml-1 text-[13px] text-muted">(Inactive)</span>}
-        </span>
-
-  },
   { key: 'lead', header: 'Project Lead', hideBelow: 'lg', render: (r) => <span className="whitespace-nowrap text-muted">{leadName(r.project.createdBy)}</span> },
   {
     key: 'members',

@@ -3,7 +3,7 @@ import { addDays, format, parseISO } from 'date-fns';
 import { EyeIcon, HistoryIcon } from 'lucide-react';
 import type { AttendanceRecord, AttendanceRow, AttendanceStatusFilter, HistorySortKey, WorkSchedule } from '../../types/attendance';
 import type { Employee } from '../../types/employees';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import { useTableDirectory } from '../../hooks/useTableDirectory';
 import {
   ATTENDANCE_STATUSES,
@@ -27,7 +27,6 @@ import { AttendanceStatusBadge } from './AttendanceStatusBadge';
 interface AttendanceHistoryPanelProps {
   employees: Employee[];
   records: AttendanceRecord[];
-  departments: Department[];
   positions: Position[];
   schedule: WorkSchedule;
   onView: (row: AttendanceRow) => void;
@@ -51,26 +50,24 @@ function compareRows(a: AttendanceRow, b: AttendanceRow, key: HistorySortKey) {
 
 const searchText = (r: AttendanceRow) => `${r.fullName} ${r.employee.employeeNumber}`;
 
-export function AttendanceHistoryPanel({ employees, records, departments, positions, schedule, onView }: AttendanceHistoryPanelProps) {
+export function AttendanceHistoryPanel({ employees, records, positions, schedule, onView }: AttendanceHistoryPanelProps) {
   const defaultFrom = format(addDays(parseISO(schedule.today), -13), 'yyyy-MM-dd');
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(schedule.today);
   const [employeeId, setEmployeeId] = useState('all');
-  const [departmentId, setDepartmentId] = useState('all');
   const [status, setStatus] = useState<AttendanceStatusFilter>('all');
   const [limit, setLimit] = useState(PAGE_SIZE);
 
   const rows = useMemo(
-    () => buildRangeRows(from, to, { employees, records, departments, positions, schedule }),
-    [from, to, employees, records, departments, positions, schedule]
+    () => buildRangeRows(from, to, { employees, records, positions, schedule }),
+    [from, to, employees, records, positions, schedule]
   );
 
   const matches = useCallback(
     (r: AttendanceRow) =>
     (employeeId === 'all' || r.employee.id === employeeId) && (
-    departmentId === 'all' || r.employee.departmentId === departmentId) && (
     status === 'all' || r.status === status),
-    [employeeId, departmentId, status]
+    [employeeId, status]
   );
   const directory = useTableDirectory<AttendanceRow, HistorySortKey>({
     rows,
@@ -81,12 +78,11 @@ export function AttendanceHistoryPanel({ employees, records, departments, positi
     descFirst: ['date', 'hours']
   });
 
-  const hasFilters = from !== defaultFrom || to !== schedule.today || employeeId !== 'all' || departmentId !== 'all' || status !== 'all';
+  const hasFilters = from !== defaultFrom || to !== schedule.today || employeeId !== 'all' || status !== 'all';
   const clearFilters = () => {
     setFrom(defaultFrom);
     setTo(schedule.today);
     setEmployeeId('all');
-    setDepartmentId('all');
     setStatus('all');
     setLimit(PAGE_SIZE);
   };
@@ -115,7 +111,6 @@ export function AttendanceHistoryPanel({ employees, records, departments, positi
         </div>
 
   },
-  { key: 'department', header: 'Department', hideBelow: 'lg', render: (r) => <span className="whitespace-nowrap">{r.department?.name ?? '—'}</span> },
   { key: 'status', header: 'Status', sortKey: 'status', render: (r) => <AttendanceStatusBadge status={r.status} /> },
   { key: 'checkIn', header: 'Check In', hideBelow: 'md', render: (r) => <span className="whitespace-nowrap tabular-nums">{formatTime(r.checkIn)}</span> },
   {
@@ -162,13 +157,6 @@ export function AttendanceHistoryPanel({ employees, records, departments, positi
           onChange={(e) => setEmployeeId(e.target.value)}
           className="xl:w-52"
           options={[{ value: 'all', label: 'All Employees' }, ...employeeOptions]} />
-        
-        <Select
-          label="Department"
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
-          className="xl:w-52"
-          options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
         
         <Select
           label="Status"

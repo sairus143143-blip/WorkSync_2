@@ -1,9 +1,9 @@
 import React, { useEffect, useId, useState } from 'react';
 import { ImagePlusIcon, InfoIcon } from 'lucide-react';
 import type { Employee, EmployeeFormValues, EmployeeView, EmploymentStatus } from '../../types/employees';
-import type { Department, Position } from '../../types/organization';
+import type { Position } from '../../types/organization';
 import type { SystemUser } from '../../types/users';
-import { assignableDepartments, assignablePositions } from '../../utils/employees';
+import { assignablePositions } from '../../utils/employees';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -16,7 +16,6 @@ interface EmployeeProfileFormModalProps {
   editing?: EmployeeView;
   employees: Employee[];
   users: SystemUser[];
-  departments: Department[];
   positions: Position[];
   suggestedNumber: string;
   onClose: () => void;
@@ -61,9 +60,7 @@ export function EmployeeProfileFormModal(props: EmployeeProfileFormModalProps) {
     event.target.value = '';
   };
 
-  // Only active records are offered; an employee's current inactive department/position stays visible when editing.
-  const departmentOptions = assignableDepartments(props.departments, editing?.employee.departmentId);
-  const positionOptions = assignablePositions(props.positions, props.departments, values.departmentId, editing?.employee.positionId);
+  const positionOptions = assignablePositions(props.positions, editing?.employee.positionId);
   const withInactiveTag = (r: {name: string;status: string;}) => r.status === 'inactive' ? `${r.name} (Inactive)` : r.name;
   const previewName = `${values.firstName} ${values.lastName}`.trim() || 'New Employee';
 
@@ -189,32 +186,13 @@ export function EmployeeProfileFormModal(props: EmployeeProfileFormModalProps) {
           
           <Input label="Date hired" type="date" value={values.dateHired} onChange={(e) => setField('dateHired', e.target.value)} error={errors.dateHired} />
           <Select
-            label="Department"
-            value={values.departmentId}
-            onChange={(e) => setField('departmentId', e.target.value)}
-            error={errors.departmentId}
-            options={[
-            { value: '', label: 'Select a department' },
-            ...departmentOptions.map((d) => ({ value: d.id, label: withInactiveTag(d) }))]
-            } />
-          
-          <Select
             label="Position"
             value={values.positionId}
             onChange={(e) => setField('positionId', e.target.value)}
             error={errors.positionId}
-            disabled={!values.departmentId}
-            hint={
-            errors.positionId ?
-            undefined :
-            !values.departmentId ?
-            'Choose a department first.' :
-            positionOptions.length === 0 ?
-            'This department has no active positions yet.' :
-            undefined
-            }
+            hint={!errors.positionId && positionOptions.length === 0 ? 'No active positions are available.' : undefined}
             options={[
-            { value: '', label: values.departmentId ? 'Select a position' : 'Select a department first' },
+            { value: '', label: 'No position selected' },
             ...positionOptions.map((p) => ({ value: p.id, label: withInactiveTag(p) }))]
             } />
           

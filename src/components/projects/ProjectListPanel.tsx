@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FolderOpenIcon, SearchXIcon, SlidersHorizontalIcon } from 'lucide-react';
-import type { Department } from '../../types/organization';
 import type { DeadlineFilter, ProgressFilter, ProjectRow, ProjectSortKey, ProjectStatusFilter } from '../../types/projects';
 import { useTableDirectory } from '../../hooks/useTableDirectory';
 import { cn } from '../../utils/cn';
@@ -18,7 +17,6 @@ const statusOrder = Object.fromEntries(PROJECT_STATUSES.map((s, i) => [s, i]));
 
 interface ProjectListPanelProps {
   rows: ProjectRow[];
-  departments: Department[];
   leadName: (createdBy: string) => string;
   onCreate: () => void;
   onView: (row: ProjectRow) => void;
@@ -33,8 +31,6 @@ function compareRows(a: ProjectRow, b: ProjectRow, key: ProjectSortKey): number 
       return a.project.name.localeCompare(b.project.name);
     case 'code':
       return a.project.code.localeCompare(b.project.code, undefined, { numeric: true });
-    case 'department':
-      return (a.department?.name ?? '').localeCompare(b.department?.name ?? '') || a.project.name.localeCompare(b.project.name);
     case 'startDate':
       return a.project.startDate.localeCompare(b.project.startDate);
     case 'deadline':
@@ -50,9 +46,8 @@ function compareRows(a: ProjectRow, b: ProjectRow, key: ProjectSortKey): number 
 
 const searchText = (r: ProjectRow) => `${r.project.name} ${r.project.code} ${r.project.description}`;
 
-export function ProjectListPanel({ rows, departments, leadName, onCreate, onView, onEdit, onManageMembers, onChangeStatus }: ProjectListPanelProps) {
+export function ProjectListPanel({ rows, leadName, onCreate, onView, onEdit, onManageMembers, onChangeStatus }: ProjectListPanelProps) {
   const [status, setStatus] = useState<ProjectStatusFilter>('all');
-  const [departmentId, setDepartmentId] = useState('all');
   const [deadline, setDeadline] = useState<DeadlineFilter>('all');
   const [progress, setProgress] = useState<ProgressFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -60,11 +55,10 @@ export function ProjectListPanel({ rows, departments, leadName, onCreate, onView
 
   const matches = useCallback(
     (r: ProjectRow) =>
-    (status === 'all' || r.project.status === status) && (
-    departmentId === 'all' || r.project.departmentId === departmentId) && (
-    deadline === 'all' || r.deadlineState === deadline) &&
+    (status === 'all' || r.project.status === status) &&
+    (deadline === 'all' || r.deadlineState === deadline) &&
     matchesProgress(r.project.progress, progress),
-    [status, departmentId, deadline, progress]
+    [status, deadline, progress]
   );
   const directory = useTableDirectory<ProjectRow, ProjectSortKey>({
     rows,
@@ -76,17 +70,16 @@ export function ProjectListPanel({ rows, departments, leadName, onCreate, onView
   });
 
   // Return to the first page whenever the result set changes shape.
-  useEffect(() => setPage(1), [directory.query, status, departmentId, deadline, progress, directory.sort]);
+  useEffect(() => setPage(1), [directory.query, status, deadline, progress, directory.sort]);
   const pageCount = Math.max(1, Math.ceil(directory.visible.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pageRows = directory.visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const activeFilterCount = [status !== 'all', departmentId !== 'all', deadline !== 'all', progress !== 'all'].filter(Boolean).length;
+  const activeFilterCount = [status !== 'all', deadline !== 'all', progress !== 'all'].filter(Boolean).length;
   const hasFilters = activeFilterCount > 0 || directory.query.trim() !== '';
   const clearFilters = () => {
     directory.setQuery('');
     setStatus('all');
-    setDepartmentId('all');
     setDeadline('all');
     setProgress('all');
   };
@@ -107,7 +100,7 @@ export function ProjectListPanel({ rows, departments, leadName, onCreate, onView
             Filters{activeFilterCount > 0 && <span className="tabular-nums text-primary">{activeFilterCount}</span>}
           </Button>
         </div>
-        <div id="project-filters" className={cn('grid-cols-1 gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4 xl:flex xl:items-center', filtersOpen ? 'grid' : 'hidden')}>
+        <div id="project-filters" className={cn('grid-cols-1 gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:items-center', filtersOpen ? 'grid' : 'hidden')}>
           <Select
             hideLabel
             label="Status"
@@ -115,14 +108,6 @@ export function ProjectListPanel({ rows, departments, leadName, onCreate, onView
             onChange={(e) => setStatus(e.target.value as ProjectStatusFilter)}
             className="xl:w-40"
             options={[{ value: 'all', label: 'All Status' }, ...PROJECT_STATUSES.map((s) => ({ value: s, label: projectStatusLabels[s] }))]} />
-          
-          <Select
-            hideLabel
-            label="Department"
-            value={departmentId}
-            onChange={(e) => setDepartmentId(e.target.value)}
-            className="xl:w-52"
-            options={[{ value: 'all', label: 'All Departments' }, ...departments.map((d) => ({ value: d.id, label: d.name }))]} />
           
           <Select
             hideLabel
@@ -156,7 +141,7 @@ export function ProjectListPanel({ rows, departments, leadName, onCreate, onView
       <EmptyState
         icon={FolderOpenIcon}
         title="No projects found"
-        description="Create your first project to begin managing organizational work."
+        description="Create your first project to begin tracking work and deadlines."
         action={<Button onClick={onCreate}>Create Project</Button>}
         className="py-16" /> :
 

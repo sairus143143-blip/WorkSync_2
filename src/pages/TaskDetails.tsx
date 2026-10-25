@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeftIcon, CloudOffIcon, PencilIcon } from 'lucide-react';
+import { ArrowLeftIcon, CloudOffIcon, PencilIcon, SearchXIcon } from 'lucide-react';
 import { TaskActivityList } from '../components/tasks/TaskActivityList';
 import { TaskDeadlineIndicators, TaskPriorityBadge, TaskStatusBadge } from '../components/tasks/TaskBadges';
 import { TaskDetailsLoading } from '../components/tasks/TasksLoading';
@@ -16,8 +16,6 @@ import { useProjects } from '../contexts/ProjectsContext';
 import { useTasks } from '../contexts/TasksContext';
 import { useUsers } from '../contexts/UsersContext';
 import { useSimulatedLoad } from '../hooks/useSimulatedLoad';
-import { employeeFullName } from '../utils/employees';
-import { findDepartment, findPosition } from '../utils/organization';
 import { formatActivityTime } from '../utils/projects';
 import { buildTaskRow, employeeTaskCounts, formatTaskDate } from '../utils/tasks';
 
@@ -40,7 +38,7 @@ export function TaskDetails({ simulateLoadError = false }: TaskDetailsProps) {
   const { tasks, activities } = useTasks();
   const { projects } = useProjects();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const { users } = useUsers();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
   const actions = useTaskActions();
@@ -48,8 +46,8 @@ export function TaskDetails({ simulateLoadError = false }: TaskDetailsProps) {
   const task = tasks.find((t) => t.id === taskId);
   const row = useMemo(() => {
     if (!task) return null;
-    return buildTaskRow(task, projects, employees, departments, positions);
-  }, [task, projects, employees, departments, positions]);
+    return buildTaskRow(task, projects, employees, positions);
+  }, [task, projects, employees, positions]);
 
   const taskActivities = useMemo(
     () => activities.filter((a) => a.taskId === taskId),
@@ -86,6 +84,7 @@ export function TaskDetails({ simulateLoadError = false }: TaskDetailsProps) {
         {back}
         <Card>
           <EmptyState
+            icon={SearchXIcon}
             title="Task not found"
             description="This task doesn’t exist or the link is incorrect."
             action={<Button onClick={() => navigate('/tasks')}>Back to tasks</Button>}
@@ -162,7 +161,6 @@ export function TaskDetails({ simulateLoadError = false }: TaskDetailsProps) {
             </div>
           </div>
           <dl className="mt-4 space-y-3">
-            <Field label="Department">{row.department?.name ?? '—'}</Field>
             <Field label="Position">{row.position?.name ?? '—'}</Field>
             <Field label="Active Tasks">{counts.active}</Field>
             <Field label="Completed Tasks">{counts.completed}</Field>

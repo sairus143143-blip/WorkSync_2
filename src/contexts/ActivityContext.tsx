@@ -45,5 +45,5 @@ export function useActivity() {
 }
 
 export function activityModule(value: string): ActivityModule {
-  return (['Tasks', 'Projects', 'Users', 'Employees', 'Departments', 'Positions', 'Attendance', 'Reports'] as const).includes(value as ActivityModule) ? value as ActivityModule : 'Tasks';
+  return (['Tasks', 'Projects', 'Users', 'Employees', 'Positions', 'Attendance', 'Reports'] as const).includes(value as ActivityModule) ? value as ActivityModule : 'Tasks';
 }

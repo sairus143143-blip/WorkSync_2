@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CloudOffIcon, LayoutGridIcon, ListIcon, PlusIcon, SearchXIcon } from 'lucide-react';
+import { CloudOffIcon, PlusIcon, SearchXIcon } from 'lucide-react';
 import { TaskBoard } from '../components/tasks/TaskBoard';
 import { TaskFilters } from '../components/tasks/TaskFilters';
 import { TaskSummary } from '../components/tasks/TaskSummary';
@@ -39,15 +39,15 @@ export function Tasks({ simulateLoadError = false }: TasksProps) {
   };
 
   const { tasks } = useTasks();
-  const { projects, members } = useProjects();
+  const { projects } = useProjects();
   const { employees } = useEmployees();
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
   const actions = useTaskActions();
 
   const rows = useMemo(
-    () => buildTaskRows(tasks, projects, employees, departments, positions),
-    [tasks, projects, employees, departments, positions]
+    () => buildTaskRows(tasks, projects, employees, positions),
+    [tasks, projects, employees, positions]
   );
   const directory = useTaskDirectory({ rows });
   const [page, setPage] = useState(1);
@@ -101,8 +101,8 @@ export function Tasks({ simulateLoadError = false }: TasksProps) {
                 value={view}
                 onChange={setView}
                 items={[
-                  { value: 'list', label: 'List View', icon: ListIcon },
-                  { value: 'board', label: 'Board View', icon: LayoutGridIcon }
+                  { value: 'list', label: 'List View' },
+                  { value: 'board', label: 'Board View' }
                 ]} />
 
               <div className="pt-5" {...tabPanelProps('tasks', view)}>
@@ -118,13 +118,10 @@ export function Tasks({ simulateLoadError = false }: TasksProps) {
                     onProjectChange={directory.setProjectId}
                     employeeId={directory.employeeId}
                     onEmployeeChange={directory.setEmployeeId}
-                    departmentId={directory.departmentId}
-                    onDepartmentChange={directory.setDepartmentId}
                     deadline={directory.deadline}
                     onDeadlineChange={directory.setDeadline}
                     projects={projects}
                     employees={employees}
-                    departments={departments}
                     hasFilters={directory.hasFilters}
                     onClear={directory.clearFilters}
                     resultCount={directory.visible.length} />

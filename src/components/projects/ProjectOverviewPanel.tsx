@@ -73,7 +73,7 @@ export function ProjectOverviewPanel({ rows, projects, activities, onViewAll }: 
                 <div className="min-w-0">
                   <ProjectLink project={r.project} />
                   <p className="text-[13px] tabular-nums text-muted">
-                    {r.project.code} · {r.department?.name ?? '—'}
+                    {r.project.code}
                   </p>
                 </div>
                 <div className="text-right sm:text-left">

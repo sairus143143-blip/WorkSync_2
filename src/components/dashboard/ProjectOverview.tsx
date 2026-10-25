@@ -7,7 +7,6 @@ import { Card } from '../ui/Card';
 import { ProgressBar } from '../ui/ProgressBar';
 import { useProjects } from '../../contexts/ProjectsContext';
 import { useEmployees } from '../../contexts/EmployeesContext';
-import { useOrganization } from '../../contexts/OrganizationContext';
 import { employeeFullName } from '../../utils/employees';
 
 const badgeTone: Record<ProjectStatus, BadgeTone> = {
@@ -26,14 +25,13 @@ const barTone: Record<ProjectStatus, ProgressTone> = {
 export function ProjectOverview({ className }: {className?: string;}) {
   const { projects, members } = useProjects();
   const { employees } = useEmployees();
-  const { departments } = useOrganization();
   const projectsForDisplay = projects.filter((project) => project.status === 'active').slice(0, 4).map((project) => {
     const leadMember = members.find((member) => member.projectId === project.id && member.status === 'active');
     const lead = leadMember ? employees.find((employee) => employee.id === leadMember.employeeId) : undefined;
-    const department = departments.find((item) => item.id === project.departmentId);
+    const teamSize = members.filter((member) => member.projectId === project.id && member.status === 'active').length;
     const status: ProjectStatus = project.status === 'active' ? 'On track' : project.status === 'completed' ? 'Completed' : project.status === 'on_hold' ? 'At risk' : 'Delayed';
     const deadlineDate = new Date(`${project.deadline}T00:00:00`);
-    return { ...project, displayStatus: status, team: department?.name ?? 'Department unavailable', leadName: lead ? employeeFullName(lead) : 'Lead unassigned', deadlineLabel: Number.isNaN(deadlineDate.getTime()) ? '—' : deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) };
+    return { ...project, displayStatus: status, teamSize, leadName: lead ? employeeFullName(lead) : 'Lead unassigned', deadlineLabel: Number.isNaN(deadlineDate.getTime()) ? '—' : deadlineDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) };
   });
   return (
     <Card
@@ -60,7 +58,7 @@ export function ProjectOverview({ className }: {className?: string;}) {
                 </Badge>
               </div>
               <p className="mt-0.5 truncate text-[13px] text-muted">
-                {project.team} · Led by {project.leadName}
+                {project.teamSize} {project.teamSize === 1 ? 'employee' : 'employees'} assigned · Led by {project.leadName}
               </p>
             </div>
             <div className="flex items-center gap-3">

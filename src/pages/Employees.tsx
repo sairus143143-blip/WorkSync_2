@@ -35,13 +35,13 @@ export function Employees({ simulateLoadError = false }: EmployeesProps) {
   const { users } = useUsers();
   const { toast } = useToast();
 
-  const { departments, positions } = useOrganization();
+  const { positions } = useOrganization();
 
   const views = useMemo(
-    () => buildEmployeeViews(employees, users, departments, positions),
-    [employees, users, departments, positions]
+    () => buildEmployeeViews(employees, users, positions),
+    [employees, users, positions]
   );
-  const directory = useEmployeeDirectory(views, positions);
+  const directory = useEmployeeDirectory(views);
   const { state: loadState, retry } = useSimulatedLoad(simulateLoadError);
   const [form, setForm] = useState<FormState>({ open: false });
   const [viewingId, setViewingId] = useState<string | null>(null);
@@ -122,8 +122,6 @@ export function Employees({ simulateLoadError = false }: EmployeesProps) {
             onQueryChange={directory.setQuery}
             status={directory.status}
             onStatusChange={directory.setStatus}
-            departmentId={directory.departmentId}
-            onDepartmentChange={directory.setDepartmentId}
             positionId={directory.positionId}
             onPositionChange={directory.setPositionId}
             hasFilters={directory.hasFilters}
@@ -167,7 +165,6 @@ export function Employees({ simulateLoadError = false }: EmployeesProps) {
         editing={form.editing}
         employees={employees}
         users={users}
-        departments={departments}
         positions={positions}
         suggestedNumber={nextEmployeeNumber(employees)}
         onClose={closeForm}

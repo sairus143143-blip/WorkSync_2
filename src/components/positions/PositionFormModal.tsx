@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useState } from 'react';
-import type { Department, Position, PositionErrors, PositionInput, RecordStatus } from '../../types/organization';
-import { findDepartment, suggestPositionCode, validatePosition } from '../../utils/organization';
+import type { Position, PositionErrors, PositionInput, RecordStatus } from '../../types/organization';
+import { suggestPositionCode, validatePosition } from '../../utils/organization';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
@@ -11,11 +11,6 @@ interface PositionFormModalProps {
   open: boolean;
   editing?: Position;
   positions: Position[];
-  departments: Department[];
-  /** Pre-selects a department when adding (e.g. from the active filter). */
-  defaultDepartmentId?: string;
-  /** Employees currently holding the position being edited. */
-  assignedEmployees?: number;
   onClose: () => void;
   onSubmit: (input: PositionInput) => void;
 }
@@ -24,30 +19,21 @@ export function PositionFormModal({
   open,
   editing,
   positions,
-  departments,
-  defaultDepartmentId,
-  assignedEmployees = 0,
   onClose,
   onSubmit
 }: PositionFormModalProps) {
-  const [values, setValues] = useState<PositionInput>({ name: '', code: '', departmentId: '', description: '', status: 'active' });
+  const [values, setValues] = useState<PositionInput>({ name: '', code: '', description: '', status: 'active' });
   const [errors, setErrors] = useState<PositionErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
-  /** While true, the code follows the selected department's next suggested code. */
-  const [autoCode, setAutoCode] = useState(true);
   const formId = useId();
 
   useEffect(() => {
     if (!open) return;
     if (editing) {
-      setValues({ name: editing.name, code: editing.code, departmentId: editing.departmentId, description: editing.description, status: editing.status });
-      setAutoCode(false);
+      setValues({ name: editing.name, code: editing.code, description: editing.description, status: editing.status });
     } else {
-      const dept = findDepartment(departments, defaultDepartmentId ?? '');
-      const departmentId = dept?.status === 'active' ? dept.id : '';
-      setValues({ name: '', code: suggestPositionCode(positions, dept?.status === 'active' ? dept : undefined), departmentId, description: '', status: 'active' });
-      setAutoCode(true);
+      setValues({ name: '', code: suggestPositionCode(positions), description: '', status: 'active' });
     }
     setErrors({});
     setSubmitted(false);
@@ -58,35 +44,30 @@ export function PositionFormModal({
 
   const update = (next: PositionInput) => {
     setValues(next);
-    if (submitted) setErrors(validatePosition(next, positions, departments, editing, assignedEmployees));
+    if (submitted) setErrors(validatePosition(next, positions, editing?.id));
   };
 
   const setField = <K extends keyof PositionInput,>(field: K, value: PositionInput[K]) => {
-    if (field === 'code') setAutoCode(false);
     const next = { ...values, [field]: value };
-    if (field === 'departmentId' && autoCode) next.code = suggestPositionCode(positions, findDepartment(departments, value as string));
     update(next);
   };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
-    const nextErrors = validatePosition(values, positions, departments, editing, assignedEmployees);
+    const nextErrors = validatePosition(values, positions, editing?.id);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     setSaving(true);
     window.setTimeout(() => onSubmit(values), 400);
   };
 
-  // Only active departments accept new positions; a position's current inactive department stays visible when editing.
-  const departmentOptions = departments.filter((d) => d.status === 'active' || d.id === editing?.departmentId);
-
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={editing ? 'Edit position' : 'Add position'}
-      description={editing ? `Position ID ${editing.id} stays the same.` : 'Create a position and assign it to a department.'}
+      description={editing ? `Position ID ${editing.id} stays the same.` : 'Create a standalone job title for employee profiles.'}
       footer={
       <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
@@ -99,22 +80,6 @@ export function PositionFormModal({
       }>
       
       <form id={formId} onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-        <Select
-          label="Department"
-          value={values.departmentId}
-          onChange={(e) => setField('departmentId', e.target.value)}
-          error={errors.departmentId}
-          hint={
-          !errors.departmentId && editing && assignedEmployees > 0 ?
-          'Positions with assigned employees stay in their department.' :
-          undefined
-          }
-          className="sm:col-span-2"
-          options={[
-          { value: '', label: 'Select a department' },
-          ...departmentOptions.map((d) => ({ value: d.id, label: d.status === 'inactive' ? `${d.name} (Inactive)` : d.name }))]
-          } />
-        
         <Input
           label="Position name"
           placeholder="IT Support Specialist"
@@ -128,7 +93,7 @@ export function PositionFormModal({
           value={values.code}
           onChange={(e) => setField('code', e.target.value.toUpperCase())}
           error={errors.code}
-          hint={!errors.code && !editing && autoCode && values.code ? 'Suggested from the department code.' : undefined} />
+          hint={!errors.code && !editing && values.code ? 'Suggested next position code.' : undefined} />
         
         <Textarea
           label="Description"

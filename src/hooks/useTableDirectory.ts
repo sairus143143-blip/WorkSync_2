@@ -5,7 +5,7 @@ interface Options<T, K extends string> {
   rows: T[];
   /** Text the search query is matched against. */
   searchText: (row: T) => string;
-  /** Caller-owned filters (status, department …). */
+  /** Caller-owned filters such as status. */
   matches?: (row: T) => boolean;
   compare: (a: T, b: T, key: K) => number;
   initialSort: SortState<K>;
