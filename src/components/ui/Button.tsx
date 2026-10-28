@@ -20,9 +20,9 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'h-8 gap-1.5 px-3 text-[13px]',
-  md: 'h-9 gap-2 px-3.5 text-sm',
-  icon: 'h-9 w-9'
+  sm: 'min-h-9 gap-1.5 px-3 text-[13px]',
+  md: 'h-10 gap-2 px-3.5 text-sm',
+  icon: 'h-10 w-10'
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

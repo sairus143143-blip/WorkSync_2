@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import { ArrowRightIcon, ClipboardListIcon } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
+import { ProgressBar } from '../components/ui/ProgressBar';
 import { useAuth } from '../contexts/AuthContext';
 import { useEmployees } from '../contexts/EmployeesContext';
 import { useProjects } from '../contexts/ProjectsContext';
@@ -13,6 +15,8 @@ import { useTasks } from '../contexts/TasksContext';
 import type { TaskStatus } from '../types/tasks';
 import { formatTaskDate, taskStatusLabels } from '../utils/tasks';
 import { fieldClass } from '../components/ui/Input';
+import { currentDateOnly } from '../utils/progressReports';
+import { isTaskOverdue } from '../utils/tasks';
 
 const statuses: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'blocked', 'completed'];
 
@@ -23,6 +27,7 @@ export function EmployeeTasks() {
   const { tasks, updateAssignedTask } = useTasks();
   const employee = employees.find((item) => item.userId === user?.id);
   const assignedTasks = tasks.filter((task) => task.assignedEmployeeId === employee?.id);
+  const today = currentDateOnly();
   const [progressDrafts, setProgressDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
 
@@ -61,9 +66,13 @@ export function EmployeeTasks() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold uppercase text-muted">{task.taskCode}{project ? ` · ${project.name}` : ''}</p>
-                    <h2 className="mt-1 text-base font-semibold text-ink">{task.title}</h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <h2 className="text-base font-semibold text-ink">{task.title}</h2>
+                      {isTaskOverdue(task, today) && <Badge tone="danger">Overdue</Badge>}
+                    </div>
                     {task.description && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{task.description}</p>}
                     <p className="mt-3 text-xs text-muted">Due {formatTaskDate(task.dueDate)} · {task.priority} priority</p>
+                    <ProgressBar className="mt-4 max-w-sm" value={task.progress} label="Task progress" showValue />
                     <Link to={`/my-reports?task=${encodeURIComponent(task.id)}`} className="mt-3 inline-flex text-sm font-medium text-primary hover:text-primary-hover">
                       View weekly reports
                     </Link>
@@ -71,7 +80,10 @@ export function EmployeeTasks() {
                   <div className="grid gap-4 sm:grid-cols-2 lg:w-[360px]">
                     <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink">
                       Status
-                      <select className={fieldClass} value={task.status} onChange={(event) => updateAssignedTask(task.id, event.target.value as TaskStatus, task.progress)}>
+                      <select className={fieldClass} value={task.status} onChange={(event) => {
+                        const saved = updateAssignedTask(task.id, event.target.value as TaskStatus, task.progress);
+                        setMessage(saved ? 'Task status saved.' : 'This task could not be updated. Refresh and try again.');
+                      }}>
                         {statuses.map((status) => <option key={status} value={status}>{taskStatusLabels[status]}</option>)}
                       </select>
                     </label>

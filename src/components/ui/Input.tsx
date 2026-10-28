@@ -2,7 +2,7 @@ import React, { forwardRef, useId } from 'react';
 import { cn } from '../../utils/cn';
 
 export const fieldClass =
-'h-9 w-full rounded-lg border bg-surface px-3 text-sm text-ink placeholder:text-subtle transition-[border-color,box-shadow] duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted';
+'h-10 w-full rounded-lg border bg-surface px-3 text-sm text-ink placeholder:text-subtle transition-[border-color,box-shadow] duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-bg disabled:text-muted';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -38,7 +38,7 @@ ref)
           id={inputId}
           aria-invalid={Boolean(error)}
           aria-describedby={error || hint ? messageId : undefined}
-          className={cn(fieldClass, error ? 'border-danger' : 'border-line', leftIcon && 'pl-9', rightElement && 'pr-10')}
+          className={cn(fieldClass, error ? 'border-danger' : 'border-line', Boolean(leftIcon) && 'pl-9', Boolean(rightElement) && 'pr-10')}
           {...rest} />
         
         {rightElement && <span className="absolute inset-y-0 right-1 flex items-center">{rightElement}</span>}

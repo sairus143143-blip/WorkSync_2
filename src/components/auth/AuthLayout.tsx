@@ -25,8 +25,7 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
             Accomplish.
           </p>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-primary-fg/85">
-            Employee Workforce &amp; Productivity Management Platform — people, attendance, projects and performance in one
-            place.
+            Employee Workforce &amp; Productivity Management Platform — projects, tasks, and progress in one place.
           </p>
         </div>
         <p className="text-[13px] text-primary-fg/75">© {new Date().getFullYear()} WorkSync · Frontend prototype</p>

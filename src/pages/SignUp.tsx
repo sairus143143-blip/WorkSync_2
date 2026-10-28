@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
@@ -28,6 +29,8 @@ export function SignUp() {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validate = (formValues = values): SignUpErrors => {
     const next: SignUpErrors = { email: validateEmail(formValues.email) };
@@ -72,8 +75,41 @@ export function SignUp() {
           <Input label="Last name" autoComplete="family-name" value={values.lastName} onChange={(event) => update('lastName', event.target.value)} error={errors.lastName} />
         </div>
         <Input label="Work email" type="email" autoComplete="email" placeholder="name@company.com" value={values.email} onChange={(event) => update('email', event.target.value)} error={errors.email} />
-        <Input label="Password" type="password" autoComplete="new-password" value={values.password} onChange={(event) => update('password', event.target.value)} error={errors.password} hint="Use at least 8 characters." />
-        <Input label="Confirm password" type="password" autoComplete="new-password" value={values.confirmPassword} onChange={(event) => update('confirmPassword', event.target.value)} error={errors.confirmPassword} />
+        <Input
+          label="Password"
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="new-password"
+          value={values.password}
+          onChange={(event) => update('password', event.target.value)}
+          error={errors.password}
+          hint="Use at least 8 characters."
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              className="rounded-md p-1.5 text-subtle transition-colors duration-150 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+              {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+            </button>
+          } />
+        <Input
+          label="Confirm password"
+          type={showConfirmPassword ? 'text' : 'password'}
+          autoComplete="new-password"
+          value={values.confirmPassword}
+          onChange={(event) => update('confirmPassword', event.target.value)}
+          error={errors.confirmPassword}
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((visible) => !visible)}
+              aria-label={showConfirmPassword ? 'Hide confirmation password' : 'Show confirmation password'}
+              aria-pressed={showConfirmPassword}
+              className="rounded-md p-1.5 text-subtle transition-colors duration-150 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+              {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+            </button>
+          } />
         <Button type="submit" className="h-10 w-full" loading={loading}>
           {loading ? 'Creating account…' : 'Create employee account'}
         </Button>

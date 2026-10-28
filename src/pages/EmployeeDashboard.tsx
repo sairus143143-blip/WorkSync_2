@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { ArrowRightIcon, ClipboardCheckIcon, Clock3Icon, ListChecksIcon, TriangleAlertIcon } from 'lucide-react';
+import { ArrowRightIcon, CheckCircle2Icon, ClipboardCheckIcon, Clock3Icon, ListChecksIcon, TriangleAlertIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -9,6 +9,7 @@ import { useEmployees } from '../contexts/EmployeesContext';
 import { useProgressReports } from '../contexts/ProgressReportsContext';
 import { useTasks } from '../contexts/TasksContext';
 import { currentDateOnly, getTaskReportPeriods, isPeriodElapsed } from '../utils/progressReports';
+import { isTaskOverdue } from '../utils/tasks';
 
 export function EmployeeDashboard() {
   const { user } = useAuth();
@@ -18,8 +19,11 @@ export function EmployeeDashboard() {
   const employee = employees.find((item) => item.userId === user?.id);
   const mine = tasks.filter((task) => task.assignedEmployeeId === employee?.id);
   const active = mine.filter((task) => task.status !== 'completed');
+  const inProgress = mine.filter((task) => task.status === 'in_progress');
+  const completed = mine.filter((task) => task.status === 'completed');
   const today = currentDateOnly();
-  const overdue = active.filter((task) => task.dueDate < today);
+  const overdue = active.filter((task) => isTaskOverdue(task, today))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const dueSoon = active.filter((task) => task.dueDate >= today)
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5);
   const dueReports = mine.flatMap((task) => getTaskReportPeriods(task)
@@ -27,16 +31,41 @@ export function EmployeeDashboard() {
     .filter((period) => !reports.some((report) => report.taskId === task.id && report.employeeId === employee?.id && report.periodStart === period.startDate && report.status !== 'needs_revision'))).length;
   const taskIds = new Set(mine.map((task) => task.id));
   const recentActivity = activities.filter((activity) => taskIds.has(activity.taskId)).slice(-5).reverse();
+  const awaitingReview = reports.filter((report) => report.employeeId === employee?.id && report.status === 'submitted').length;
 
   return (
     <div className="space-y-6">
       <PageHeader title={`Welcome, ${user?.name.split(' ')[0] ?? 'there'}`} description="Your assigned work, upcoming deadlines, and weekly reporting." />
-      <section aria-label="My work summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="My work summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Assigned tasks" value={String(mine.length)} icon={ListChecksIcon} tone="primary" />
-        <StatCard label="In progress" value={String(active.length)} icon={Clock3Icon} tone="warning" />
+        <StatCard label="In progress" value={String(inProgress.length)} icon={Clock3Icon} tone="warning" />
+        <StatCard label="Completed" value={String(completed.length)} icon={CheckCircle2Icon} tone="success" />
         <StatCard label="Overdue" value={String(overdue.length)} icon={TriangleAlertIcon} tone="danger" />
         <StatCard label="Reports due" value={String(dueReports)} icon={ClipboardCheckIcon} tone="primary" />
+        <StatCard label="Reports awaiting review" value={String(awaitingReview)} icon={ClipboardCheckIcon} tone="neutral" />
       </section>
+      {overdue.length > 0 && (
+        <section aria-labelledby="overdue-tasks-heading" className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="overdue-tasks-heading" className="text-base font-semibold text-ink">Overdue tasks</h2>
+            <Link to="/my-tasks" className="text-sm font-medium text-primary">Review tasks</Link>
+          </div>
+          <Card className="divide-y divide-line">
+            {overdue.slice(0, 5).map((task) => (
+              <Link key={task.id} to="/my-tasks" className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-ink">{task.title}</span>
+                  <span className="text-xs text-muted">{task.taskCode} · {task.progress}% complete</span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-sm tabular-nums text-danger">{format(parseISO(task.dueDate), 'MMM d')}</span>
+                  <span className="text-xs font-medium text-danger">Overdue</span>
+                </span>
+              </Link>
+            ))}
+          </Card>
+        </section>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <section aria-labelledby="employee-deadlines-heading" className="space-y-3">
           <div className="flex items-center justify-between"><h2 id="employee-deadlines-heading" className="text-base font-semibold text-ink">Upcoming deadlines</h2><Link to="/my-tasks" className="text-sm font-medium text-primary">All tasks</Link></div>
@@ -44,7 +73,9 @@ export function EmployeeDashboard() {
             {dueSoon.length === 0 ? <p className="py-8 text-center text-sm text-muted">No active task deadlines.</p> : dueSoon.map((task) => (
               <Link key={task.id} to="/my-tasks" className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                 <span className="min-w-0"><span className="block truncate text-sm font-medium text-ink">{task.title}</span><span className="text-xs text-muted">{task.taskCode} · {task.progress}% complete</span></span>
-                <span className="shrink-0 text-sm tabular-nums text-muted">{format(parseISO(task.dueDate), 'MMM d')}</span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-sm tabular-nums text-muted">{format(parseISO(task.dueDate), 'MMM d')}</span>
+                </span>
               </Link>
             ))}
           </Card>
